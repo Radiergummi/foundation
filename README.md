@@ -1,4 +1,4 @@
-# Foundation
+# Foundation ![Travis badge](https://api.travis-ci.org/Radiergummi/foundation.svg?branch=master "Travis test status")
 A WordPress meta generator.
 
 **Please note: This is so early in development, I'm almost afraid to present it to another pair of eyes. Please don't judge on code organization, optimization issues or missing functionality yet** :smile:  
