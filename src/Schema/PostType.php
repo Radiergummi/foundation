@@ -22,8 +22,10 @@ class PostType extends SchemaChange {
 
     /**
      * holds the default post type capabilities
+     *
+     * @var string[]
      */
-    protected const CAPABILITIES = [
+    const CAPABILITIES = [
         'edit_post',
         'edit_posts',
         'edit_private_posts',
@@ -42,8 +44,10 @@ class PostType extends SchemaChange {
 
     /**
      * holds the default post type features
+     *
+     * @var string[]
      */
-    protected const FEATURES = [
+    const FEATURES = [
         'title',
         'editor',
         'comments',
@@ -61,8 +65,9 @@ class PostType extends SchemaChange {
      * holds the default post type labels
      *
      * @see https://developer.wordpress.org/reference/functions/get_post_type_labels/#description
+     * @var string[]
      */
-    protected const
+    const
         /** @noinspection SqlNoDataSourceInspection */
         LABELS = [
         'name'                  => '%ss',

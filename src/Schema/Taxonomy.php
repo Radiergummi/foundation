@@ -18,6 +18,8 @@ class Taxonomy extends SchemaChange {
 
     /**
      * holds the taxonomy default capabilities
+     *
+     * @var string[]
      */
     protected const CAPABILITIES = [
         'manage_categories',
@@ -28,8 +30,9 @@ class Taxonomy extends SchemaChange {
      * holds the default taxonomy labels
      *
      * @see https://developer.wordpress.org/reference/functions/get_taxonomy_labels/#description
+     * @var string[]
      */
-    protected const
+    const
         /** @noinspection SqlNoDataSourceInspection */
         LABELS = [
         'name'                       => '%ss',
