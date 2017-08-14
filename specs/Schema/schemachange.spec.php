@@ -1,8 +1,11 @@
 <?php
 
+use Radiergummi\Foundation\Framework\Schema\Capability;
 use Radiergummi\Foundation\Framework\Schema\Exceptions\PostTypeFeatureUnknownException;
 use Radiergummi\Foundation\Framework\Schema\PostType;
 use Radiergummi\Foundation\Framework\Schema\Role\Administrator as AdministratorRole;
+use Radiergummi\Foundation\Framework\Schema\Role\Subscriber as SubscriberRole;
+use Radiergummi\Foundation\Framework\Schema\RoleFactory;
 use Radiergummi\Foundation\Framework\Schema\Taxonomy;
 use Radiergummi\Foundation\Framework\Schema\User;
 
@@ -359,9 +362,22 @@ describe( 'Schema', function() {
                 assert( $user->getCapabilities() === $expectedValue );
             } );
 
-            it('should assign multiple role capabilities correctly', function() {
+            it( 'should assign multiple role capabilities correctly', function() {
+                $expectedValue = [
+                    "read",
+                    "upload_files"
+                ];
+                $user          = new User( 'test' );
+                $userRole1     = new SubscriberRole();
+                $userRole2     = RoleFactory::create( 'testrole', [
+                    Capability::UPLOAD_FILES
+                ] );
 
-            });
+                $user->addRole( $userRole1 );
+                $user->addRole( $userRole2 );
+
+                assert( $user->getCapabilities() === $expectedValue );
+            } );
         } );
     } );
 } );
