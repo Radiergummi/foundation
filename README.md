@@ -1,5 +1,7 @@
 # Foundation
-A WordPress meta generator
+A WordPress meta generator.
+
+**Please note: This is so early in development, I'm almost afraid to present it to another pair of eyes. Please don't judge on code organization, optimization issues or missing functionality yet** :smile:  
 
 ## How it works
 Building a WordPress application is really cumbersome if you are used to modern PHP development: PHP7 is everywhere, Object oriented programming is pretty much default, frameworks use PSR standards and abstract so much that you almost forgot to work on low-level details.  
@@ -30,7 +32,8 @@ add_action('init', 'wpf_theme_name_0729171315_action_example_name', 10, 2);
 ````
 
 In development, you'll have full IDE support available: That's because *Foundation* defines WordPress as a dependency and runs all your code within a WordPress context. The actual code transformation is achieved using reflection - So while you just write the code you want to, *Foundation* intelligently uses the string content and builds your application from it.  
-Additionally, every aspect of *Foundation* is configurable and extensible - From the console application accepting custom commands simply by dropping them below `app/Console/Commands`, overwriting default output templates by dropping them below `app/templates` to extending the `Generator` classes. There is extensive configuration with sensible defaults located below `app/config`.
+Additionally, every aspect of *Foundation* is configurable and extensible - From the console application accepting custom commands simply by dropping them below `app/Console/Commands`, overwriting default output templates by dropping them below `app/templates` to extending the `Generator` classes. There is extensive configuration with sensible defaults located below `app/config`.  
+*Foundation* is written with a TDD workflow, so you can expect tested functionality to work. Run `peridot` to start the tests.
 
 
 ## Usage
