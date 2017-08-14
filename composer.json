@@ -1,0 +1,24 @@
+{
+  "name": "radiergummi/wp-foundation",
+  "description": "WP Foundation provides a framework to generate optimized function.php-files from an OOP source",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Moritz Friedrich",
+      "email": "m@9dev.de"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/",
+      "Radiergummi\\Foundation\\Framework\\": "src/"
+    }
+  },
+  "require": {
+    "cilex/cilex": "^2.0",
+    "peridot-php/peridot": "^1.19",
+    "peridot-php/peridot-code-coverage-reporters": "^2.0",
+    "symfony/yaml": "^3.3"
+  }
+}

@@ -1,0 +1,28 @@
+#!/usr/local/php5/bin/php
+
+<?php
+/**
+ * @TODO Shebang note:
+ * MacOS workaround, should be
+ * #!/usr/bin/env php
+ */
+use Radiergummi\Foundation\Framework\Console\Kernel;
+
+/**
+ * check for the autoloader
+ */
+if ( ! $loader = include dirname( dirname( __FILE__ ) ) . '/vendor/autoload.php' ) {
+    die( 'Error: Application not yet installed. Please run "composer install"' );
+}
+
+/**
+ * Create the application kernel that handles input and output. Essentially, this defines the basic application
+ * behaviour, definition of commands, input handling, and so on.
+ */
+$kernel = new Kernel();
+
+/**
+ * Handle the current command. The handle method returns a physical status code which is passed to PHPs exit
+ * method, so the binary will always end with that same code.
+ */
+exit($kernel->handle());
