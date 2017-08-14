@@ -21,7 +21,7 @@ class Taxonomy extends SchemaChange {
      *
      * @var string[]
      */
-    protected const CAPABILITIES = [
+    const CAPABILITIES = [
         'manage_categories',
         'edit_posts'
     ];
