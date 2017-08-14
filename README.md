@@ -13,7 +13,7 @@ All code will be concatenated into the relevant `functions.php` or `plugin.php` 
 
 On a conceptual level, Foundation is exactly what it says: A foundation to build your projects on. If this works out as I intend it to, you'll never have to touch your functions.php again - kind of like nobody writes plain CSS anymore.
 
-Look at the following code that creates a new post type:
+Look at the following code that attaches a new action to `init`:
 
 ````php
 $myAction = new Action('example name', $callback);
