@@ -2,10 +2,10 @@
 
 namespace Radiergummi\Foundation\Framework\Config\Exception;
 
-use ErrorException;
+use Radiergummi\Foundation\Framework\Exception\FoundationException;
 
 /**
  * UnknownConfigFileFormatException class
  */
-class UnknownConfigFileFormatException extends ErrorException {
+class UnknownConfigFileFormatException extends FoundationException {
 }

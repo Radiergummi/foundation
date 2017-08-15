@@ -2,12 +2,12 @@
 
 namespace Radiergummi\Foundation\Framework\Schema\Exception;
 
-use ErrorException;
+use Radiergummi\Foundation\Framework\Exception\FoundationException;
 
 /**
  * PostTypeFeatureUnknownException class
  *
  * @package Radiergummi\Foundation\Framework\Schema\Exception
  */
-class PostTypeFeatureUnknownException extends ErrorException {
+class PostTypeFeatureUnknownException extends FoundationException {
 }

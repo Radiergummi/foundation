@@ -2,10 +2,10 @@
 
 namespace Radiergummi\Foundation\Framework\Config\Exception;
 
-use ErrorException;
+use Radiergummi\Foundation\Framework\Exception\FoundationException;
 
 /**
  * InvalidConfigFileException class
  */
-class InvalidConfigFileException extends ErrorException {
+class InvalidConfigFileException extends FoundationException {
 }

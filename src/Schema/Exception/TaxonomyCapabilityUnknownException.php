@@ -2,12 +2,12 @@
 
 namespace Radiergummi\Foundation\Framework\Schema\Exception;
 
-use ErrorException;
+use Radiergummi\Foundation\Framework\Exception\FoundationException;
 
 /**
  * TaxonomyCapabilityUnknownException class
  *
  * @package Radiergummi\Foundation\Framework\Schema\Exception
  */
-class TaxonomyCapabilityUnknownException extends ErrorException {
+class TaxonomyCapabilityUnknownException extends FoundationException {
 }
