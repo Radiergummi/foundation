@@ -4,7 +4,7 @@ namespace Radiergummi\Foundation\Framework\Config\Adapters;
 
 use function preg_match;
 use Radiergummi\Foundation\Framework\Config\Adapter;
-use Radiergummi\Foundation\Framework\Config\Exceptions\InvalidConfigFileException;
+use Radiergummi\Foundation\Framework\Config\Exception\InvalidConfigFileException;
 use /** @noinspection PhpUndefinedClassInspection */
     Throwable;
 use function var_export;

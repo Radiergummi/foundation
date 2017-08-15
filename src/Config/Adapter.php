@@ -31,7 +31,7 @@ interface Adapter {
      * @param string $data
      *
      * @return array
-     * @throws \Radiergummi\Foundation\Framework\Config\Exceptions\InvalidConfigFileException
+     * @throws \Radiergummi\Foundation\Framework\Config\Exception\InvalidConfigFileException
      */
     public static function decode( string $data ): array;
 }

@@ -1,13 +1,13 @@
 <?php
 
-namespace Radiergummi\Foundation\Framework\Schema\Exceptions;
+namespace Radiergummi\Foundation\Framework\Schema\Exception;
 
 use ErrorException;
 
 /**
  * SchemaNotSerializableException class
  *
- * @package Radiergummi\Foundation\Framework\Schema\Exceptions
+ * @package Radiergummi\Foundation\Framework\Schema\Exception
  */
 class SchemaNotSerializableException extends ErrorException {
 }

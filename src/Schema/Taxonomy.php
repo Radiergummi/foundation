@@ -2,7 +2,7 @@
 
 namespace Radiergummi\Foundation\Framework\Schema;
 
-use Radiergummi\Foundation\Framework\Schema\Exceptions\TaxonomyCapabilityUnknownException;
+use Radiergummi\Foundation\Framework\Schema\Exception\TaxonomyCapabilityUnknownException;
 use UnexpectedValueException;
 use function array_push;
 use function array_search;
@@ -649,7 +649,7 @@ class Taxonomy extends SchemaChange {
      *
      * @param array $capabilities
      *
-     * @throws \Radiergummi\Foundation\Framework\Schema\Exceptions\TaxonomyCapabilityUnknownException
+     * @throws \Radiergummi\Foundation\Framework\Schema\Exception\TaxonomyCapabilityUnknownException
      */
     public function setCapabilities( array $capabilities ) {
         foreach ( $capabilities as $capability ) {
@@ -719,7 +719,7 @@ class Taxonomy extends SchemaChange {
      * @param string $capability
      *
      * @return void
-     * @throws \Radiergummi\Foundation\Framework\Schema\Exceptions\TaxonomyCapabilityUnknownException
+     * @throws \Radiergummi\Foundation\Framework\Schema\Exception\TaxonomyCapabilityUnknownException
      */
     public function addCapability( string $capability ) {
         if ( in_array( $capability, Taxonomy::CAPABILITIES ) ) {

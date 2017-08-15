@@ -8,7 +8,7 @@ use function json_last_error;
 use function json_last_error_msg;
 use const JSON_PRETTY_PRINT;
 use Radiergummi\Foundation\Framework\Config\Adapter;
-use Radiergummi\Foundation\Framework\Config\Exceptions\InvalidConfigFileException;
+use Radiergummi\Foundation\Framework\Config\Exception\InvalidConfigFileException;
 
 /**
  * JSON adapter

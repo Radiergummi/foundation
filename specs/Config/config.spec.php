@@ -10,9 +10,9 @@ use Radiergummi\Foundation\Framework\Config\Adapters\PhpAdapter;
 use Radiergummi\Foundation\Framework\Config\Adapters\YamlAdapter;
 use Radiergummi\Foundation\Framework\Config\Config;
 use Radiergummi\Foundation\Framework\Config\ConfigLoader;
-use Radiergummi\Foundation\Framework\Config\Exceptions\ConfigFileNotFoundException;
-use Radiergummi\Foundation\Framework\Config\Exceptions\InvalidConfigFileException;
-use Radiergummi\Foundation\Framework\Config\Exceptions\UnknownConfigFileFormatException;
+use Radiergummi\Foundation\Framework\Config\Exception\ConfigFileNotFoundException;
+use Radiergummi\Foundation\Framework\Config\Exception\InvalidConfigFileException;
+use Radiergummi\Foundation\Framework\Config\Exception\UnknownConfigFileFormatException;
 
 describe( 'Config', function() {
     beforeEach( function() {

@@ -4,7 +4,7 @@ namespace Radiergummi\Foundation\Framework\Schema;
 
 use JsonSerializable;
 use function method_exists;
-use Radiergummi\Foundation\Framework\Schema\Exceptions\SchemaNotSerializableException;
+use Radiergummi\Foundation\Framework\Schema\Exception\SchemaNotSerializableException;
 
 /**
  * SchemaChange class

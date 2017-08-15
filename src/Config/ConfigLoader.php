@@ -5,8 +5,8 @@ namespace Radiergummi\Foundation\Framework\Config;
 use function array_key_exists;
 use function is_file;
 use Radiergummi\Foundation\Framework\ClassCollector;
-use Radiergummi\Foundation\Framework\Config\Exceptions\ConfigFileNotFoundException;
-use Radiergummi\Foundation\Framework\Config\Exceptions\UnknownConfigFileFormatException;
+use Radiergummi\Foundation\Framework\Config\Exception\ConfigFileNotFoundException;
+use Radiergummi\Foundation\Framework\Config\Exception\UnknownConfigFileFormatException;
 use function array_merge;
 use function file_get_contents;
 use function realpath;
@@ -52,9 +52,9 @@ class ConfigLoader {
      * @param string $path
      *
      * @return \Radiergummi\Foundation\Framework\Config\Config
-     * @throws \Radiergummi\Foundation\Framework\Config\Exceptions\InvalidConfigFileException
-     * @throws \Radiergummi\Foundation\Framework\Config\Exceptions\UnknownConfigFileFormatException
-     * @throws \Radiergummi\Foundation\Framework\Config\Exceptions\ConfigFileNotFoundException
+     * @throws \Radiergummi\Foundation\Framework\Config\Exception\InvalidConfigFileException
+     * @throws \Radiergummi\Foundation\Framework\Config\Exception\UnknownConfigFileFormatException
+     * @throws \Radiergummi\Foundation\Framework\Config\Exception\ConfigFileNotFoundException
      */
     public function loadFile( string $path ): Config {
 

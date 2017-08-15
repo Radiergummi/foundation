@@ -2,8 +2,8 @@
 
 namespace Radiergummi\Foundation\Framework\Schema;
 
-use Radiergummi\Foundation\Framework\Schema\Exceptions\PostTypeCapabilityUnknownException;
-use Radiergummi\Foundation\Framework\Schema\Exceptions\PostTypeFeatureUnknownException;
+use Radiergummi\Foundation\Framework\Schema\Exception\PostTypeCapabilityUnknownException;
+use Radiergummi\Foundation\Framework\Schema\Exception\PostTypeFeatureUnknownException;
 use function array_map;
 use function array_merge;
 use function array_push;
@@ -768,7 +768,7 @@ class PostType extends SchemaChange {
      *
      * @param array $capabilities
      *
-     * @throws \Radiergummi\Foundation\Framework\Schema\Exceptions\PostTypeCapabilityUnknownException
+     * @throws \Radiergummi\Foundation\Framework\Schema\Exception\PostTypeCapabilityUnknownException
      */
     public function setCapabilities( array $capabilities ) {
         foreach ( $capabilities as $capability ) {
@@ -809,7 +809,7 @@ class PostType extends SchemaChange {
      * @param array $supportedFeatures
      *
      * @return void
-     * @throws \Radiergummi\Foundation\Framework\Schema\Exceptions\PostTypeFeatureUnknownException
+     * @throws \Radiergummi\Foundation\Framework\Schema\Exception\PostTypeFeatureUnknownException
      */
     public function setSupportedFeatures( array $supportedFeatures ) {
         foreach ( $supportedFeatures as $feature ) {
@@ -933,7 +933,7 @@ class PostType extends SchemaChange {
      * @param string $capability
      *
      * @return void
-     * @throws \Radiergummi\Foundation\Framework\Schema\Exceptions\PostTypeCapabilityUnknownException
+     * @throws \Radiergummi\Foundation\Framework\Schema\Exception\PostTypeCapabilityUnknownException
      */
     public function addCapability( string $capability ) {
         if ( in_array( $capability, PostType::CAPABILITIES ) ) {
@@ -949,7 +949,7 @@ class PostType extends SchemaChange {
      * @param string $feature
      *
      * @return void
-     * @throws \Radiergummi\Foundation\Framework\Schema\Exceptions\PostTypeFeatureUnknownException
+     * @throws \Radiergummi\Foundation\Framework\Schema\Exception\PostTypeFeatureUnknownException
      */
     public function addSupportedFeature( string $feature ) {
         if ( in_array( $feature, PostType::FEATURES ) ) {

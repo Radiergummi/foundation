@@ -1,7 +1,7 @@
 <?php
 
 use Radiergummi\Foundation\Framework\Schema\Capability;
-use Radiergummi\Foundation\Framework\Schema\Exceptions\PostTypeFeatureUnknownException;
+use Radiergummi\Foundation\Framework\Schema\Exception\PostTypeFeatureUnknownException;
 use Radiergummi\Foundation\Framework\Schema\PostType;
 use Radiergummi\Foundation\Framework\Schema\Role\Administrator as AdministratorRole;
 use Radiergummi\Foundation\Framework\Schema\Role\Subscriber as SubscriberRole;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Radiergummi\Foundation\Framework\Config\Exceptions;
+namespace Radiergummi\Foundation\Framework\Config\Exception;
 
 use ErrorException;
 

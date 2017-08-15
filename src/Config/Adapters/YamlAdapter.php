@@ -3,7 +3,7 @@
 namespace Radiergummi\Foundation\Framework\Config\Adapters;
 
 use Radiergummi\Foundation\Framework\Config\Adapter;
-use Radiergummi\Foundation\Framework\Config\Exceptions\InvalidConfigFileException;
+use Radiergummi\Foundation\Framework\Config\Exception\InvalidConfigFileException;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
