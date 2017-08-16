@@ -2,6 +2,8 @@
 
 namespace Radiergummi\Foundation\Framework;
 
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use function array_filter;
 use function array_key_exists;
 use function array_map;
@@ -13,7 +15,6 @@ use function file_get_contents;
 use function implode;
 use function json_decode;
 use function realpath;
-use function scandir;
 use function str_replace;
 
 /**
@@ -47,13 +48,30 @@ trait ClassCollector {
             return [];
         }
 
-        $files = scandir( $namespaceDirectory );
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator( $namespaceDirectory, RecursiveDirectoryIterator::SKIP_DOTS ),
+            RecursiveIteratorIterator::SELF_FIRST,
+            RecursiveIteratorIterator::CATCH_GET_CHILD
+        );
 
-        $classes = array_map( function( $file ) use ( $namespace ) {
+        $files = [];
+
+        /** @var \SplFileInfo $file */
+        foreach ( $iterator as $file ) {
+            if ( ! $file->isDir() ) {
+                $files[] = str_replace(
+                    DIRECTORY_SEPARATOR,
+                    '\\',
+                    substr( $file->getPathname(), strlen( $namespaceDirectory ) + 1 )
+                );
+            }
+        }
+
+        $classes = array_map( function ( $file ) use ( $namespace ) {
             return $namespace . '\\' . str_replace( '.php', '', $file );
         }, $files );
 
-        return array_filter( $classes, function( $possibleClass ) {
+        return array_filter( $classes, function ( $possibleClass ) {
             return class_exists( $possibleClass );
         } );
     }
