@@ -1,6 +1,6 @@
 <?php
 
-namespace Radiergummi\Foundation\Framework\Console\Commands;
+namespace Radiergummi\Foundation\Framework\Console\Commands\Dependency;
 
 use Cilex\Provider\Console\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -9,7 +9,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Add dependency command
  *
- * @package Radiergummi\Foundation\Framework\Console\Commands
+ * @package Radiergummi\Foundation\Framework\Console\Commands\Dependency
  */
 class Add extends Command {
     protected function configure() {
