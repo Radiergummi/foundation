@@ -8,6 +8,17 @@ namespace Radiergummi\Foundation\Framework\Dependencies;
  * @package Radiergummi\Foundation\Framework\Dependencies
  */
 class Dependency {
+    const TYPE_BOWER_MODULE     = 'bower-module';
+
+    const TYPE_COMPOSER_MODULE  = 'composer-module';
+
+    const TYPE_EXTERNAL         = 'external';
+
+    const TYPE_NODE_MODULE      = 'node-module';
+
+    const TYPE_WORDPRESS_PLUGIN = 'wordpress-plugin';
+
+    const TYPE_WORDPRESS_THEME  = 'wordpress-theme';
 
     /**
      * dependency name
@@ -30,6 +41,16 @@ class Dependency {
      */
     protected $remote = '';
 
+    /**
+     * dependency type
+     *
+     * @var string
+     */
+    protected $type = Dependency::TYPE_EXTERNAL;
+
+    /**
+     * Dependency constructor
+     */
     public function __construct() {
 
     }

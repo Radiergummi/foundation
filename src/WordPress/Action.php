@@ -7,7 +7,10 @@ namespace Radiergummi\Foundation\Framework\WordPress;
  * Holds constants for all available actions in WordPress. This serves the purpose of providing autocompletion in
  * IDEs and editors. It also provides a neat reference of available actions in the documentation, plus, Foundation
  * has a valid dictionary of actions it can use.
+ * TODO: Insert documentation from those links:
  *
+ * @link    https://adambrown.info/p/wp_hooks/version/4.4?order=type#variableHooks
+ * @link    https://codex.wordpress.org/Plugin_API/Action_Reference
  * @package Radiergummi\Foundation\Framework\WordPress
  */
 class Action {
