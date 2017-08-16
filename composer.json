@@ -19,6 +19,8 @@
     "cilex/cilex": "^2.0",
     "peridot-php/peridot": "^1.19",
     "peridot-php/peridot-code-coverage-reporters": "^2.0",
-    "symfony/yaml": "^3.3"
+    "symfony/yaml": "^3.3",
+    "guzzlehttp/guzzle": "^6.3",
+    "lastguest/murmurhash": "^1.3"
   }
 }

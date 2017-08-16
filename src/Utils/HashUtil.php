@@ -2,7 +2,10 @@
 
 namespace Radiergummi\Foundation\Framework\Utils;
 
+use Exception;
 use Radiergummi\Foundation\Framework\Utils\Exception\HashAlgorithmUnknownException;
+use Radiergummi\Foundation\Framework\Utils\Exception\NotEnoughEntropyException;
+use function bin2hex;
 use function function_exists;
 use function hash_algos;
 use function in_array;
@@ -21,29 +24,70 @@ use function random_bytes;
  * @package Radiergummi\Foundation\Framework\Utils
  */
 class HashUtil {
-    const METHOD_CRC32     = 'crc32';
 
-    const METHOD_FAST      = HashUtil::METHOD_CRC32;
+    /**
+     * CRC32
+     *
+     * @var string
+     */
+    const METHOD_CRC32 = 'crc32';
 
-    const METHOD_MD5       = 'md5';
+    /**
+     * Alias to the currently fastest hashing method
+     *
+     * @var string
+     */
+    const METHOD_FAST = HashUtil::METHOD_CRC32;
 
-    const METHOD_MURMUR3   = 'murmurhash3';
+    /**
+     * MD5
+     *
+     * @var string
+     */
+    const METHOD_MD5 = 'md5';
 
+    /**
+     * MurmurHash3
+     *
+     * @var string
+     */
+    const METHOD_MURMUR3 = 'murmurhash3';
+
+    /**
+     * Alias to the currently preferred hashing algorithm
+     *
+     * @var string
+     */
     const METHOD_PREFERRED = HashUtil::METHOD_MURMUR3;
 
-    const METHOD_SAFE      = HashUtil::METHOD_SHA512;
+    /**
+     * Alias to the currently most collision safe algorithm
+     *
+     * @var string
+     */
+    const METHOD_SAFE = HashUtil::METHOD_SHA512;
 
-    const METHOD_SHA1      = 'sha1';
+    /**
+     * SHA1
+     *
+     * @var string
+     */
+    const METHOD_SHA1 = 'sha1';
 
-    const METHOD_SHA512    = 'sha512';
+    /**
+     * SHA512
+     *
+     * @var string
+     */
+    const METHOD_SHA512 = 'sha512';
 
     /**
      * hashes a string with a given
      *
-     * @param string $input
-     * @param string $method
+     * @param string $input  input to create a hash value for
+     * @param string $method hashing algorithm to use
      *
-     * @return string
+     * @return string hash for the input string
      * @throws \Radiergummi\Foundation\Framework\Utils\Exception\HashAlgorithmUnknownException
      */
     public static function hash( string $input, string $method = HashUtil::METHOD_PREFERRED ): string {
@@ -58,7 +102,27 @@ class HashUtil {
         throw new HashAlgorithmUnknownException( $method . ' is currently not supported' );
     }
 
+    /**
+     * returns a cryptographically safe random string
+     *
+     * @param int  $length random string length
+     * @param bool $binary whether to return a binary string. defaults to false. otherwise, will return ASCII
+     *
+     * @return string random string
+     * @throws \Radiergummi\Foundation\Framework\Utils\Exception\NotEnoughEntropyException
+     */
     public static function random( int $length = 24, bool $binary = false ): string {
-        return bin2hex( random_bytes( $length ) );
+        try {
+            $random = random_bytes( $length );
+        }
+        catch ( Exception $exception ) {
+            throw new NotEnoughEntropyException( $exception->getMessage() );
+        }
+
+        if ( $binary ) {
+            return $random;
+        }
+
+        return bin2hex( $random );
     }
 }

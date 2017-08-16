@@ -31,6 +31,16 @@ function wpf_theme_name_0729171315_action_example($arg1, $arg2) {
 add_action('init', 'wpf_theme_name_0729171315_action_example_name', 10, 2);
 ````
 
+Or you go further and use the EventDispatcher syntax:
+
+````php
+// constant event name for helpful IDE hints
+$this->addListener(WordPress\Events::PARSE_QUERY, $callback);
+````
+
+You don't need to know whether "parse_query" is an action or a filter, you don't need unique callback names or a parameter count. *Foundation* does that for you.
+
+
 In development, you'll have full IDE support available: That's because *Foundation* defines WordPress as a dependency and runs all your code within a WordPress context. The actual code transformation is achieved using reflection - So while you just write the code you want to, *Foundation* intelligently uses the string content and builds your application from it.  
 Additionally, every aspect of *Foundation* is configurable and extensible - From the console application accepting custom commands simply by dropping them below `app/Console/Commands`, overwriting default output templates by dropping them below `app/templates` to extending the `Generator` classes. There is extensive configuration with sensible defaults located below `app/config`.  
 *Foundation* is written with a TDD workflow, so you can expect tested functionality to work. Run `peridot` to start the tests.
