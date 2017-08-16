@@ -57,13 +57,14 @@ class Manager {
     protected function download( Dependency $dependency ) {
         $response = null;
         $temporaryFileName = $dependency->getName() . time();
+        $temporaryFilePath = realpath( __DIR__ . '/../../cache/' . $temporaryFileName);
 
         try {
             $response = $this->httpClient->request(
                 'GET',
                 $dependency->getRemote(),
                 [
-                    'sink' => realpath( __DIR__ . '/../../cache/' . $temporaryFileName)
+                    'sink' => $temporaryFilePath
                 ]
             );
         }
@@ -71,6 +72,6 @@ class Manager {
             throw new DependencyDownloadException('Could not download dependency: ' . $transferException->getMessage());
         }
 
-        
+        echo stat($temporaryFilePath);
     }
 }

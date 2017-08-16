@@ -8,16 +8,35 @@ namespace Radiergummi\Foundation\Framework\Dependencies;
  * @package Radiergummi\Foundation\Framework\Dependencies
  */
 class Dependency {
+
+    /**
+     * type description for bower modules
+     */
     const TYPE_BOWER_MODULE     = 'bower-module';
 
+    /**
+     * type description for composer modules
+     */
     const TYPE_COMPOSER_MODULE  = 'composer-module';
 
+    /**
+     * type description for external modules
+     */
     const TYPE_EXTERNAL         = 'external';
 
+    /**
+     * type description for node.js modules
+     */
     const TYPE_NODE_MODULE      = 'node-module';
 
+    /**
+     * type description for WordPress plugins
+     */
     const TYPE_WORDPRESS_PLUGIN = 'wordpress-plugin';
 
+    /**
+     * type description for WordPress themes
+     */
     const TYPE_WORDPRESS_THEME  = 'wordpress-theme';
 
     /**

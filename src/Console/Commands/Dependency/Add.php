@@ -7,13 +7,13 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Build command
+ * Add dependency command
  *
  * @package Radiergummi\Foundation\Framework\Console\Commands
  */
-class Build extends Command {
+class Add extends Command {
     protected function configure() {
-        $this->setName( 'build' )->setDescription( 'Get Application Information' );
+        $this->setName( 'dependency:add' )->setDescription( 'Get Application Information' );
     }
 
     /**
@@ -23,6 +23,8 @@ class Build extends Command {
      * @return void
      */
     protected function execute( InputInterface $input, OutputInterface $output ) {
+        parent::execute( $input, $output );
+
         $output->writeln( 'TODO: This will build the application' );
     }
 }
