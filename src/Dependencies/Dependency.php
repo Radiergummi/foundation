@@ -12,22 +12,22 @@ class Dependency {
     /**
      * type description for bower modules
      */
-    const TYPE_BOWER_MODULE     = 'bower-module';
+    const TYPE_BOWER_MODULE = 'bower-module';
 
     /**
      * type description for composer modules
      */
-    const TYPE_COMPOSER_MODULE  = 'composer-module';
+    const TYPE_COMPOSER_MODULE = 'composer-module';
 
     /**
      * type description for external modules
      */
-    const TYPE_EXTERNAL         = 'external';
+    const TYPE_EXTERNAL = 'external';
 
     /**
      * type description for node.js modules
      */
-    const TYPE_NODE_MODULE      = 'node-module';
+    const TYPE_NODE_MODULE = 'node-module';
 
     /**
      * type description for WordPress plugins
@@ -37,7 +37,7 @@ class Dependency {
     /**
      * type description for WordPress themes
      */
-    const TYPE_WORDPRESS_THEME  = 'wordpress-theme';
+    const TYPE_WORDPRESS_THEME = 'wordpress-theme';
 
     /**
      * dependency name
@@ -69,9 +69,15 @@ class Dependency {
 
     /**
      * Dependency constructor
+     *
+     * @param string $name
+     * @param string $version
+     * @param string $remote
      */
-    public function __construct() {
-
+    public function __construct( string $name, string $version = '', string $remote = '' ) {
+        $this->setName( $name );
+        $this->setVersion( $version );
+        $this->setRemote( $remote );
     }
 
     /**
@@ -126,5 +132,9 @@ class Dependency {
      */
     public function setRemote( string $remote ) {
         $this->remote = $remote;
+    }
+
+    public function getType() {
+        return $this->type;
     }
 }
