@@ -2,25 +2,25 @@
 
 namespace Radiergummi\Foundation\Framework\Config;
 
-use function array_key_exists;
-use function is_file;
 use Radiergummi\Foundation\Framework\ClassCollector;
+use Radiergummi\Foundation\Framework\ComposerData;
 use Radiergummi\Foundation\Framework\Config\Exception\ConfigFileNotFoundException;
 use Radiergummi\Foundation\Framework\Config\Exception\UnknownConfigFileFormatException;
+use Radiergummi\Foundation\Framework\Utils\PathUtil;
+use function array_key_exists;
 use function array_merge;
 use function file_get_contents;
-use function realpath;
-use function pathinfo;
+use function file_put_contents;
+use function is_file;
 use function sprintf;
-use function strtolower;
 
 /**
- * ConfigLoader class
+ * ConfigProvider class
  *
- * @property string rootPath
+ * @property string composerConfig
  * @package Radiergummi\Foundation\Framework\Config
  */
-class ConfigLoader {
+class ConfigProvider {
     use ClassCollector;
 
     /**
@@ -30,8 +30,11 @@ class ConfigLoader {
      */
     private $adapters = [];
 
+    /**
+     * ConfigProvider constructor
+     */
     public function __construct() {
-        $this->rootPath = realpath( __DIR__ . '/../..' ) . '/';
+        $this->composerConfig = new ComposerData( PathUtil::normalize( '../../composer.json' ) );
 
         // load configuration adapters
         $frameworkAdapters   = $this->getClassesInNamespace( __NAMESPACE__ . '\\Adapters' );
@@ -41,6 +44,7 @@ class ConfigLoader {
 
         // store adapters as [ "format" => "adapter" ]
         foreach ( $adapters as $adapter ) {
+
             /** @var \Radiergummi\Foundation\Framework\Config\Adapter $adapter */
             $this->adapters[ $adapter::getSupportedFileFormat() ] = $adapter;
         }
@@ -63,7 +67,7 @@ class ConfigLoader {
         }
 
         // retrieve the file extension
-        $extension = strtolower( pathinfo( $path, PATHINFO_EXTENSION ) );
+        $extension = PathUtil::extension( $path );
 
         if ( array_key_exists( $extension, $this->adapters ) ) {
 
@@ -71,12 +75,36 @@ class ConfigLoader {
             $data = $this->adapters[ $extension ]::decode( file_get_contents( $path ) );
 
             // create the configuration instance
-            return new Config( $data );
+            $config = new Config( $data );
+            $config->setPath( $path );
+
+            return $config;
         }
 
         throw new UnknownConfigFileFormatException(
             sprintf( 'No adapter available for .%s files', $extension )
         );
+    }
+
+    /**
+     * saves a configuration file
+     *
+     * @param \Radiergummi\Foundation\Framework\Config\Config $config
+     *
+     * @return void
+     */
+    public function saveFile( Config $config ) {
+
+        // retrieve the file extension
+        $extension = PathUtil::extension( $config->getPath() );
+
+        if ( array_key_exists( $extension, $this->adapters ) ) {
+
+            // encode the configuration data
+            $encodedData = $this->adapters[ $extension ]::encode( $config->getData() );
+
+            file_put_contents( $config->getPath(), $encodedData );
+        }
     }
 
     /**
@@ -86,5 +114,9 @@ class ConfigLoader {
      */
     public function getAdapters(): array {
         return $this->adapters;
+    }
+
+    public function getSupportedFileFormats(): array {
+        return array_keys( $this->adapters );
     }
 }

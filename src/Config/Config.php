@@ -11,7 +11,20 @@ use Radiergummi\Foundation\Framework\Utils\ArrayUtil;
  * @package Radiergummi\Foundation\Framework\Config
  */
 class Config implements ArrayAccess {
-    private $data = [];
+
+    /**
+     * holds the config data
+     *
+     * @var array
+     */
+    protected $data = [];
+
+    /**
+     * holds the config file path
+     *
+     * @var string
+     */
+    protected $path = '';
 
     /**
      * Config constructor
@@ -23,13 +36,33 @@ class Config implements ArrayAccess {
     }
 
     /**
-     * @param string $key
-     * @param null   $fallback
+     * retrieves the config file path
      *
-     * @return mixed|null
+     * @return string
      */
-    public function get( string $key, $fallback = null ) {
-        return ArrayUtil::get( $this->data, $key, $fallback );
+    public function getPath(): string {
+        return $this->path;
+    }
+
+    /**
+     * retrieves the Config Data
+     *
+     * @return array
+     */
+    public function getData(): array {
+        return $this->data;
+    }
+
+
+    /**
+     * sets the config file path
+     *
+     * @param string $path
+     *
+     * @return void
+     */
+    public function setPath( string $path ) {
+        $this->path = $path;
     }
 
     /**
@@ -47,8 +80,18 @@ class Config implements ArrayAccess {
      *
      * @return void
      */
-    public function set( string $key, $value ) {
-        ArrayUtil::set( $this->data, $key, $value );
+    public function __set( string $key, $value ) {
+        $this->set( $key, $value );
+    }
+
+    /**
+     * @param string $key
+     * @param null   $fallback
+     *
+     * @return mixed|null
+     */
+    public function get( string $key, $fallback = null ) {
+        return ArrayUtil::get( $this->data, $key, $fallback );
     }
 
     /**
@@ -57,17 +100,8 @@ class Config implements ArrayAccess {
      *
      * @return void
      */
-    public function __set( string $key, $value ) {
-        $this->set( $key, $value );
-    }
-
-    /**
-     * @param string $key
-     *
-     * @return bool
-     */
-    public function has( string $key ): bool {
-        return ArrayUtil::has( $this->data, $key );
+    public function set( string $key, $value ) {
+        ArrayUtil::set( $this->data, $key, $value );
     }
 
     /**
@@ -82,10 +116,10 @@ class Config implements ArrayAccess {
     /**
      * @param string $key
      *
-     * @return void
+     * @return bool
      */
-    public function remove( string $key ) {
-        ArrayUtil::remove( $this->data, $key );
+    public function has( string $key ): bool {
+        return ArrayUtil::has( $this->data, $key );
     }
 
     /**
@@ -97,18 +131,48 @@ class Config implements ArrayAccess {
         $this->remove( $key );
     }
 
-    public function offsetGet( $offset ) {
-        return $this->get( $offset );
+    /**
+     * @param string $key
+     *
+     * @return void
+     */
+    public function remove( string $key ) {
+        ArrayUtil::remove( $this->data, $key );
     }
 
-    public function offsetSet( $offset, $value ) {
-        $this->set( $offset, $value );
-    }
-
+    /**
+     * @param mixed $offset
+     *
+     * @return bool
+     */
     public function offsetExists( $offset ) {
         return $this->has( $offset );
     }
 
+    /**
+     * @param mixed $offset
+     *
+     * @return mixed|null
+     */
+    public function offsetGet( $offset ) {
+        return $this->get( $offset );
+    }
+
+    /**
+     * @param mixed $offset
+     * @param mixed $value
+     *
+     * @return void
+     */
+    public function offsetSet( $offset, $value ) {
+        $this->set( $offset, $value );
+    }
+
+    /**
+     * @param mixed $offset
+     *
+     * @return void
+     */
     public function offsetUnset( $offset ) {
         $this->remove( $offset );
     }

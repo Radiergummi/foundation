@@ -9,7 +9,7 @@ use Radiergummi\Foundation\Framework\Config\Adapters\JsonAdapter;
 use Radiergummi\Foundation\Framework\Config\Adapters\PhpAdapter;
 use Radiergummi\Foundation\Framework\Config\Adapters\YamlAdapter;
 use Radiergummi\Foundation\Framework\Config\Config;
-use Radiergummi\Foundation\Framework\Config\ConfigLoader;
+use Radiergummi\Foundation\Framework\Config\ConfigProvider;
 use Radiergummi\Foundation\Framework\Config\Exception\ConfigFileNotFoundException;
 use Radiergummi\Foundation\Framework\Config\Exception\InvalidConfigFileException;
 use Radiergummi\Foundation\Framework\Config\Exception\UnknownConfigFileFormatException;
@@ -295,7 +295,7 @@ describe( 'Config', function() {
     } );
 } );
 
-describe( 'ConfigLoader', function() {
+describe( 'ConfigProvider', function() {
     describe( 'Adapters', function() {
         describe( 'JSON adapter', function() {
             it( 'should support .json files', function() {
@@ -436,11 +436,11 @@ describe( 'ConfigLoader', function() {
 
     describe( 'Loader', function() {
         beforeEach( function() {
-            $this->loader = new ConfigLoader();
+            $this->loader = new ConfigProvider();
         } );
 
         it( 'should instantiate', function() {
-            assert( $this->loader instanceof ConfigLoader );
+            assert( $this->loader instanceof ConfigProvider );
         } );
 
         it( 'should discover the default JSON adapter', function() {

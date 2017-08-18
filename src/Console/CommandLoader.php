@@ -2,15 +2,13 @@
 
 namespace Radiergummi\Foundation\Framework\Console;
 
-use InvalidArgumentException;
-use function is_dir;
 use Radiergummi\Foundation\Framework\ClassCollector;
-use function realpath;
+use Radiergummi\Foundation\Framework\ComposerData;
 
 /**
  * CommandLoader class
  *
- * @property string rootPath
+ * @property array $composerConfig
  * @package Radiergummi\Foundation\Framework\Console
  */
 class CommandLoader {
@@ -19,15 +17,11 @@ class CommandLoader {
     /**
      * CommandLoader constructor
      *
-     * @param string $path path to composer.json
+     * @param ComposerData $composerConfig composer.json config data
      *
      * @throws \InvalidArgumentException
      */
-    public function __construct( string $path ) {
-        if ( ! is_dir( $path ) ) {
-            throw new InvalidArgumentException( 'Could not load commands: Invalid application path' );
-        }
-
-        $this->rootPath = realpath( $path ) . '/';
+    public function __construct( ComposerData $composerConfig ) {
+        $this->composerConfig = $composerConfig;
     }
 }

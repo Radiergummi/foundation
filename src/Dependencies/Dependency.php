@@ -61,6 +61,13 @@ class Dependency {
     protected $remote = '';
 
     /**
+     * local file
+     *
+     * @var string
+     */
+    protected $local = '';
+
+    /**
      * dependency type
      *
      * @var string
@@ -78,6 +85,24 @@ class Dependency {
         $this->setName( $name );
         $this->setVersion( $version );
         $this->setRemote( $remote );
+    }
+
+    /**
+     * retrieves the dependency local file
+     *
+     * @return string
+     */
+    public function getLocal(): string {
+        return $this->local;
+    }
+
+    /**
+     * sets the dependency local file
+     *
+     * @param string $local
+     */
+    public function setLocal( string $local ) {
+        $this->local = $local;
     }
 
     /**

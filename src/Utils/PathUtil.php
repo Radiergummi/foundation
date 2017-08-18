@@ -2,10 +2,12 @@
 
 namespace Radiergummi\Foundation\Framework\Utils;
 
+use Exception;
 use const DIRECTORY_SEPARATOR;
 use const PATHINFO_BASENAME;
 use const PATHINFO_DIRNAME;
 use const PATHINFO_EXTENSION;
+use function chmod;
 use function is_string;
 use function pathinfo;
 use function str_replace;
@@ -16,6 +18,10 @@ use function str_replace;
  * @package Radiergummi\Foundation\Framework\Utils
  */
 class PathUtil {
+
+    const ITERATE_RECURSIVE = true;
+
+    const ITERATE_FLAT      = false;
 
     /**
      * joins multiple paths
@@ -85,17 +91,6 @@ class PathUtil {
     }
 
     /**
-     * retrieves the directory name of a path
-     *
-     * @param string $path path to retrieve a directory name for
-     *
-     * @return string directory name
-     */
-    public static function directory( string $path ): string {
-        return pathinfo( $path, PATHINFO_DIRNAME );
-    }
-
-    /**
      * retrieves the file extension
      *
      * @param string $path path to retrieve the extension for
@@ -104,13 +99,6 @@ class PathUtil {
      */
     public static function extension( string $path ): string {
         return pathinfo( $path, PATHINFO_EXTENSION );
-    }
-
-    public static function normalize( string $path ): string {
-        $patterns     = [ '~/{2,}~', '~/(\./)+~', '~([^/\.]+/(?R)*\.{2,}/)~', '~\.\./~' ];
-        $replacements = [ DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, '', '' ];
-
-        return preg_replace( $patterns, $replacements, $path );
     }
 
     public static function relative( string $source, string $destination ): string {
@@ -151,5 +139,45 @@ class PathUtil {
 
         // Strip last separator
         return substr( $relativePath, 0, - 1 );
+    }
+
+    public static function create( string $path, int $mode = 0755 ) {
+        $directory = static::normalize( $path );
+
+        try {
+            if ( ! is_dir( $directory ) ) {
+                mkdir( $directory, $mode, true );
+                chmod( $directory, $mode );
+            };
+        }
+        catch ( Exception $exception ) {
+            // TODO: Catch the pesky exception
+        }
+    }
+
+    public static function normalize( string $path ): string {
+        $patterns     = [ '~/{2,}~', '~/(\./)+~', '~([^/\.]+/(?R)*\.{2,}/)~', '~\.\./~' ];
+        $replacements = [ DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, '', '' ];
+
+        return preg_replace( $patterns, $replacements, $path );
+    }
+
+    /**
+     * retrieves the directory name of a path
+     *
+     * @param string $path path to retrieve a directory name for
+     *
+     * @return string directory name
+     */
+    public static function directory( string $path ): string {
+        if ( $path{- 1} === DIRECTORY_SEPARATOR ) {
+            return pathinfo( $path, PATHINFO_BASENAME );
+        }
+
+        return pathinfo( $path, PATHINFO_DIRNAME );
+    }
+
+    public static function iterate( string $path, bool $recursive = PathUtil::ITERATE_RECURSIVE ) {
+
     }
 }

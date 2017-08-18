@@ -516,45 +516,19 @@ class File {
     protected $mimeType = '';
 
     /**
+     * holds the file extension
+     *
+     * @var string
+     */
+    protected $extension;
+
+    /**
      * File constructor
      *
      * @param string $path
      */
     public function __construct( string $path ) {
         $this->setPath( $path );
-    }
-
-    /**
-     * tries to map the files mime type against a set of well-known mime types to find the extension
-     *
-     * @return string
-     */
-    public function getExtensionByMimeType(): string {
-        foreach ( File::MIME_TYPES as $extension => $mimeTypes ) {
-            if ( array_search( $this->getMimeType(), $mimeTypes ) !== false ) {
-                return $extension;
-            }
-        }
-
-        return 'dat';
-    }
-
-    /**
-     * retrieves the files mime type
-     *
-     * @return string
-     */
-    public function getMimeType(): string {
-        return $this->mimeType;
-    }
-
-    /**
-     * sets the files mime type
-     *
-     * @param string $mimeType
-     */
-    public function setMimeType( string $mimeType ) {
-        $this->mimeType = $mimeType;
     }
 
     /**
@@ -595,5 +569,56 @@ class File {
      */
     public function copy( string $destinationPath ) {
         copy( $this->getPath(), $destinationPath );
+    }
+
+    /**
+     * retrieves the file extension
+     *
+     * @return string
+     */
+    public function getExtension(): string {
+        return $this->extension ?? $this->getExtensionByMimeType();
+    }
+
+    /**
+     * sets the file extension
+     *
+     * @param string $extension
+     */
+    public function setExtension( string $extension ) {
+        $this->extension = $extension;
+    }
+
+    /**
+     * tries to map the files mime type against a set of well-known mime types to find the extension
+     *
+     * @return string
+     */
+    public function getExtensionByMimeType(): string {
+        foreach ( File::MIME_TYPES as $extension => $mimeTypes ) {
+            if ( array_search( $this->getMimeType(), $mimeTypes ) !== false ) {
+                return $extension;
+            }
+        }
+
+        return 'dat';
+    }
+
+    /**
+     * retrieves the files mime type
+     *
+     * @return string
+     */
+    public function getMimeType(): string {
+        return $this->mimeType;
+    }
+
+    /**
+     * sets the files mime type
+     *
+     * @param string $mimeType
+     */
+    public function setMimeType( string $mimeType ) {
+        $this->mimeType = $mimeType;
     }
 }

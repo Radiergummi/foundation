@@ -39,15 +39,14 @@ class Add extends Command {
     protected function execute( InputInterface $input, OutputInterface $output ) {
 
         $dependencyManager = new DependencyManager();
+        $dependencyManager->setOutputStream($output);
 
         $testDependency = new Dependency(
             $input->getArgument( 'name' ),
-            $input->getOption( 'version' ) ?? '',
+            $input->getOption( 'release' ) ?? '',
             $input->getOption( 'remote' ) ?? ''
         );
 
         $dependencyManager->add( $testDependency );
-
-        $output->writeln( 'TODO: This will build the application' );
     }
 }

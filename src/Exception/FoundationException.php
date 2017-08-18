@@ -7,14 +7,27 @@ use JsonSerializable;
 use Radiergummi\Foundation\Framework\Utils\HashUtil;
 use Throwable;
 
+/** @noinspection PhpUndefinedClassInspection */
+
 /**
  * FoundationException class
  *
+ * @property null line
+ * @property null file
  * @package Radiergummi\Foundation\Framework\Exception
  */
-class FoundationException extends Exception implements JsonSerializable {
-    public function __construct( string $message, int $code = 0, Exception $previous = null ) {
+class FoundationException extends Exception implements JsonSerializable, Throwable {
+    public function __construct(
+        string $message,
+        int $code = 0,
+        Exception $previous = null,
+        $file = null,
+        $line = null
+    ) {
         parent::__construct( $message, $code, $previous );
+
+        $this->file = $file ?? $this->file;
+        $this->line = $line ?? $this->line;
     }
 
     public function jsonSerialize() {

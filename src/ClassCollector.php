@@ -2,6 +2,7 @@
 
 namespace Radiergummi\Foundation\Framework;
 
+use Radiergummi\Foundation\Framework\Utils\PathUtil;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use function array_filter;
@@ -11,10 +12,7 @@ use function array_pop;
 use function array_reverse;
 use function class_exists;
 use function explode;
-use function file_get_contents;
 use function implode;
-use function json_decode;
-use function realpath;
 use function str_replace;
 
 /**
@@ -28,11 +26,11 @@ use function str_replace;
 trait ClassCollector {
 
     /**
-     * root path
+     * composer configuration data
      *
-     * @var string
+     * @var \Radiergummi\Foundation\Framework\ComposerData
      */
-    private $rootPath;
+    private $composerConfig;
 
     /**
      * retrieves all classes in a given namespace
@@ -67,25 +65,13 @@ trait ClassCollector {
             }
         }
 
-        $classes = array_map( function ( $file ) use ( $namespace ) {
+        $classes = array_map( function( $file ) use ( $namespace ) {
             return $namespace . '\\' . str_replace( '.php', '', $file );
         }, $files );
 
-        return array_filter( $classes, function ( $possibleClass ) {
+        return array_filter( $classes, function( $possibleClass ) {
             return class_exists( $possibleClass );
         } );
-    }
-
-    /**
-     * retrieves defined namespaces from composer.json
-     *
-     * @return array
-     */
-    private function getDefinedNamespaces(): array {
-        $composerJsonPath = $this->rootPath . '/composer.json';
-        $composerConfig   = json_decode( file_get_contents( $composerJsonPath ) );
-
-        return (array) $composerConfig->autoload->{'psr-4'};
     }
 
     /**
@@ -105,12 +91,27 @@ trait ClassCollector {
             $possibleNamespace = implode( '\\', $namespaceFragments ) . '\\';
 
             if ( array_key_exists( $possibleNamespace, $composerNamespaces ) ) {
-                return realpath( $this->rootPath . $composerNamespaces[ $possibleNamespace ] . implode( '/', array_reverse( $undefinedNamespaceFragments ) ) );
+                return PathUtil::normalize( PathUtil::join(
+                    '..',
+                    $composerNamespaces[ $possibleNamespace ],
+                    ...array_reverse( $undefinedNamespaceFragments )
+                ) );
             }
 
             $undefinedNamespaceFragments[] = array_pop( $namespaceFragments );
         }
 
         return false;
+    }
+
+    /**
+     * retrieves defined namespaces from composer.json
+     *
+     * @return array
+     */
+    private function getDefinedNamespaces(): array {
+
+        /** @noinspection PhpUndefinedFieldInspection */
+        return (array) $this->composerConfig->get( 'autoload.psr-4' );
     }
 }

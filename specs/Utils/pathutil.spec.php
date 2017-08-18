@@ -3,14 +3,14 @@
 use Radiergummi\Foundation\Framework\Utils\PathUtil;
 
 describe( 'PathUtil', function() {
-    it( 'should retrieve the basename', function() {
+    it( 'should determine the basename', function() {
         $path          = '/foo/bar/baz/quz.log';
         $expectedValue = 'quz.log';
 
         assert( PathUtil::basename( $path ) === $expectedValue );
     } );
 
-    it( 'should retrieve the basename without extension', function() {
+    it( 'should determine the basename without extension', function() {
         $path          = '/foo/bar/baz/quz.log';
         $extension     = '.log';
         $expectedValue = 'quz';
@@ -38,25 +38,39 @@ describe( 'PathUtil', function() {
         assert( PathUtil::isAbsolute( $relativePath ) === false );
     } );
 
-    it ('should determine the directory of a path', function() {
-        $path = '/foo/bar/baz/quz.log';
+    it( 'should determine the directory of a path', function() {
+        $path          = '/foo/bar/baz/quz.log';
         $expectedValue = '/foo/bar/baz';
 
-        assert(PathUtil::directory($path) === $expectedValue);
-    });
+        assert( PathUtil::directory( $path ) === $expectedValue );
+    } );
 
-    it('should normalize a path', function() {
-        $path = '/foo//bar/.././baz////quz.log';
+    it( 'should normalize a path', function() {
+        $path          = '/foo//bar/.././baz////quz.log';
         $expectedValue = '/foo/baz/quz.log';
 
-        assert(PathUtil::normalize($path) === $expectedValue);
-    });
+        assert( PathUtil::normalize( $path ) === $expectedValue );
+    } );
 
-    it('should build a relative path', function() {
-        $from = '/foo/bar/buz/test/';
-        $to = '/foo/bar/test/quz';
+    it( 'should build a relative path', function() {
+        $from          = '/foo/bar/buz/test/';
+        $to            = '/foo/bar/test/quz';
         $expectedValue = '../../test/quz';
 
-        assert(PathUtil::relative($from, $to) === $expectedValue);
-    });
+        assert( PathUtil::relative( $from, $to ) === $expectedValue );
+    } );
+
+    it( 'should determine a file extension', function() {
+        $path          = '/foo/bar/buz/test.zip';
+        $expectedValue = 'zip';
+
+        assert( PathUtil::extension( $path ) === $expectedValue );
+    } );
+
+    it( 'should determine a file extension from a URL', function() {
+        $path          = 'https://example.com/foo/bar/buz/test.zip';
+        $expectedValue = 'zip';
+
+        assert( PathUtil::extension( $path ) === $expectedValue );
+    } );
 } );
