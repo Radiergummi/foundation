@@ -468,8 +468,7 @@ describe( 'ConfigProvider', function() {
         } );
 
         it( 'should return a Config object', function() {
-            $testFile = realpath( __DIR__ . '/../../composer.json' );
-
+            $testFile = __DIR__ . '/../../composer.json';
             assert( $this->loader->loadFile( $testFile ) instanceof Config );
         } );
 

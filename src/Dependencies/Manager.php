@@ -2,15 +2,16 @@
 
 namespace Radiergummi\Foundation\Framework\Dependencies;
 
-use Composer\Semver\Comparator;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\TransferException;
 use Radiergummi\Foundation\Framework\Dependencies\Exception\DependencyDownloadException;
+use Radiergummi\Foundation\Framework\Exception\FoundationException;
 use Radiergummi\Foundation\Framework\FileSystem\File;
 use Radiergummi\Foundation\Framework\Utils\PathUtil;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\OutputInterface;
 use const FILEINFO_MIME_TYPE;
+use const PHP_EOL;
 use function finfo_open;
 use function is_string;
 
@@ -85,51 +86,50 @@ class Manager {
     }
 
     /**
+     * updates a dependency by removing the old data and downloading the new
+     *
+     * @param \Radiergummi\Foundation\Framework\Dependencies\Dependency $dependency
+     *
+     * @return void
+     * @throws \Radiergummi\Foundation\Framework\Dependencies\Exception\DependencyDownloadException
+     * @throws \Radiergummi\Foundation\Framework\Exception\FoundationException
+     * @throws \Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException
+     */
+    public function update( Dependency $dependency ) {
+        // TODO: Update dependency
+
+        $oldFile = new File( $this->getIndex()->get( $dependency->getName() . '.local' ) );
+
+        $oldFile->delete();
+
+        $this->add( $dependency );
+    }
+
+    /**
+     * retrieves the Manager Index
+     *
+     * @return \Radiergummi\Foundation\Framework\Dependencies\Index
+     */
+    public function getIndex(): Index {
+        return $this->index;
+    }
+
+    /**
      * adds a new dependency
      *
      * @param \Radiergummi\Foundation\Framework\Dependencies\Dependency $dependency
      *
      * @return void
      * @throws \Radiergummi\Foundation\Framework\Dependencies\Exception\DependencyDownloadException
+     * @throws \Radiergummi\Foundation\Framework\Exception\FoundationException
      */
     public function add( Dependency $dependency ) {
-        $this->output->writeln( sprintf( 'adding dependency %s', $dependency->getName() ) );
-
-        // check if we have that dependency already
-        if ( $this->index->has( $dependency->getName() ) ) {
-
-            // dependency exists already, check version
-            if ( Comparator::greaterThan(
-                $dependency->getVersion(),
-                $this->index->get( sprintf( '%s.version', $dependency->getName() ) ) )
-            ) {
-                $this->output->writeln( sprintf(
-                                            'local %s version is lower than %s [%s]',
-                                            $dependency->getName(),
-                                            $dependency->getVersion(),
-                                            $this->index->get( sprintf( '%s.version', $dependency->getName() ) )
-                                        ) );
-
-                // new version is greater than existing, update
-                $this->update( $dependency );
-
-                return;
-            }
-            // new version is lower or equal, ignore or verify
-            $this->output->writeln( sprintf(
-                                        'local %s version is greater than %s [%s]',
-                                        $dependency->getName(),
-                                        $dependency->getVersion(),
-                                        $this->index->get( sprintf( '%s.version', $dependency->getName() ) )
-                                    ) );
-            $this->output->writeln( 'downgrade? [y|N]' );
-        }
 
         // download the dependency
         $this->download( $dependency );
 
         // add the dependency to the index
-        $this->index->set( $dependency->getName(), [
+        $this->getIndex()->set( $dependency->getName(), [
             'version' => $dependency->getVersion(),
             'local'   => $dependency->getLocal(),
             'remote'  => $dependency->getRemote(),
@@ -137,11 +137,7 @@ class Manager {
         ] );
 
         // save the index to disk
-        $this->index->save();
-    }
-
-    public function update( Dependency $dependency ) {
-
+        $this->getIndex()->save();
     }
 
     /**
@@ -151,6 +147,7 @@ class Manager {
      *
      * @return void
      * @throws \Radiergummi\Foundation\Framework\Dependencies\Exception\DependencyDownloadException
+     * @throws \Radiergummi\Foundation\Framework\Exception\FoundationException
      */
     protected function download( Dependency $dependency ) {
         $response          = null;
@@ -173,6 +170,10 @@ class Manager {
                 [
                     'sink'     => $temporaryFilePath,
                     'progress' => function( int $total, int $progress ) use ( &$progressBar, $output, $remote ) {
+                        #if ( ! $output ) {
+                        #    return;
+                        #}
+
                         if ( ! $progressBar ) {
 
                             // the progress callback gets called before the actual download starts
@@ -216,20 +217,44 @@ class Manager {
 
         $dependencyFile->setMimeType( $fileType ?? $response->getHeader( 'Content-Type' )[0] );
 
-        PathUtil::create( PathUtil::join(
-            $this->getStoragePath(),
-            $dependency->getType()
-        ) );
+        try {
+            PathUtil::create( PathUtil::join(
+                $this->getStoragePath(),
+                $dependency->getType()
+            ) );
 
-        $dependencyFile->move( PathUtil::join(
-            $this->getStoragePath(),
-            $dependency->getType(),
-            sprintf( '%s-%s.%s',
-                     $dependency->getName(),
-                     $dependency->getVersion(),
-                     $dependencyFile->getExtension()
-            )
-        ) );
+            $dependencyFile->move( PathUtil::join(
+                $this->getStoragePath(),
+                $dependency->getType(),
+                sprintf( '%s-%s.%s',
+                         $dependency->getName(),
+                         $dependency->getVersion(),
+                         $dependencyFile->getExtension()
+                )
+            ) );
+
+            $dependency->setLocal( $dependencyFile->getPath());
+        }
+
+        catch ( FoundationException $exception ) {
+            // TODO: Handle errors
+            echo PHP_EOL . 'would throw here.';
+            throw new FoundationException( 'Could not store the remote file locally', 1, $exception );
+        }
+
+        finally {
+
+            // if something has gone wrong creating the storage path and moving the file there,
+            // we'll want to clean up the cache
+            if ( $dependencyFile->getPath() === $temporaryFilePath ) {
+                try {
+                    $dependencyFile->delete();
+                }
+                catch ( FoundationException $exception ) {
+                    // TODO: The cache could not be cleaned up - the user will need to know about this.
+                }
+            }
+        }
     }
 
     /**
@@ -268,6 +293,10 @@ class Manager {
         $this->storagePath = $storagePath;
     }
 
+    public function list() {
+        return $this->index->getAll();
+    }
+
     public function setOutputStream( OutputInterface $output ) {
         $this->output = $output;
     }
@@ -280,6 +309,6 @@ class Manager {
      * @return void
      */
     public function remove( Dependency $dependency ) {
-
+        $this->getIndex()->get( sprintf( '%s.local', $dependency->getName() ) );
     }
 }

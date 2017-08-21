@@ -19,7 +19,11 @@ describe( 'ArrayUtil', function() {
                     'first_string' => 'bar'
                 ]
             ],
-            'fifth_array'   => [ 10, 20, 30 ]
+            'sixth key with spaces' => 'foo',
+            'seventh nested' => [
+                'first nested string' => 'bar'
+            ],
+            'eighth_array'   => [ 10, 20, 30 ]
         ];
     } );
 
@@ -31,9 +35,24 @@ describe( 'ArrayUtil', function() {
             assert( ArrayUtil::get( $this->data, $keyName ) === $expectedValue );
         } );
 
+
+        it( 'should get a value with a space in the key name', function() {
+            $keyName       = 'sixth key with spaces';
+            $expectedValue = 'foo';
+
+            assert( ArrayUtil::get( $this->data, $keyName ) === $expectedValue );
+        } );
+
         it( 'should get a nested value', function() {
             $keyName       = 'fourth_nested.first_float';
             $expectedValue = 3.14;
+
+            assert( ArrayUtil::get( $this->data, $keyName ) === $expectedValue );
+        } );
+
+        it( 'should get a nested value with a space in the key name', function() {
+            $keyName       = 'seventh nested.first nested string';
+            $expectedValue = 'bar';
 
             assert( ArrayUtil::get( $this->data, $keyName ) === $expectedValue );
         } );

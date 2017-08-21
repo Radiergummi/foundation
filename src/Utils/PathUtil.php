@@ -2,7 +2,8 @@
 
 namespace Radiergummi\Foundation\Framework\Utils;
 
-use Exception;
+use Radiergummi\Foundation\Framework\Exception\FoundationException;
+use Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException;
 use const DIRECTORY_SEPARATOR;
 use const PATHINFO_BASENAME;
 use const PATHINFO_DIRNAME;
@@ -19,9 +20,9 @@ use function str_replace;
  */
 class PathUtil {
 
-    const ITERATE_RECURSIVE = true;
-
     const ITERATE_FLAT      = false;
+
+    const ITERATE_RECURSIVE = true;
 
     /**
      * joins multiple paths
@@ -144,14 +145,20 @@ class PathUtil {
     public static function create( string $path, int $mode = 0755 ) {
         $directory = static::normalize( $path );
 
-        try {
-            if ( ! is_dir( $directory ) ) {
-                mkdir( $directory, $mode, true );
+        if ( ! is_dir( $directory ) ) {
+            try {
+                mkdir( $directory, $mode,  true );
                 chmod( $directory, $mode );
-            };
-        }
-        catch ( Exception $exception ) {
-            // TODO: Catch the pesky exception
+            }
+            catch ( FoundationException $exception ) {
+                throw new FileSystemException(
+                    'could not create directory ' . $path,
+                    1,
+                    $exception,
+                    __FILE__,
+                    __LINE__
+                );
+            }
         }
     }
 

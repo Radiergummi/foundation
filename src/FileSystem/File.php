@@ -2,6 +2,14 @@
 
 namespace Radiergummi\Foundation\Framework\FileSystem;
 
+use Radiergummi\Foundation\Framework\Exception\FoundationException;
+use Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException;
+use Radiergummi\Foundation\Framework\Utils\PathUtil;
+use const FILE_APPEND;
+use function file_get_contents;
+use function file_put_contents;
+use function unlink;
+
 /**
  * File class
  *
@@ -527,7 +535,7 @@ class File {
      *
      * @param string $path
      */
-    public function __construct( string $path ) {
+    public function __construct( string $path = '' ) {
         $this->setPath( $path );
     }
 
@@ -535,11 +543,27 @@ class File {
      * moves a file on the file system
      *
      * @param string $destinationPath path to move the file to
+     *                                code 2 - ENOENT
+     *                                code x
      *
      * @return void
+     * @throws \Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException
      */
     public function move( string $destinationPath ) {
-        rename( $this->getPath(), $destinationPath );
+        try {
+            rename( $this->getPath(), $destinationPath );
+        }
+        catch ( FoundationException $exception ) {
+            throw new FileSystemException(
+                'Could not move file ' . $this->getPath(),
+                1,
+                $exception,
+                __FILE__,
+                __LINE__
+            );
+        }
+
+        $this->setPath( $destinationPath );
     }
 
     /**
@@ -557,7 +581,7 @@ class File {
      * @param string $path path to set
      */
     public function setPath( string $path ) {
-        $this->path = $path;
+        $this->path = PathUtil::normalize( $path );
     }
 
     /**
@@ -601,7 +625,8 @@ class File {
             }
         }
 
-        return 'dat';
+        // fall back to the file extension from path
+        return PathUtil::extension( $this->getPath() ) ?? 'dat';
     }
 
     /**
@@ -610,7 +635,7 @@ class File {
      * @return string
      */
     public function getMimeType(): string {
-        return $this->mimeType;
+        return $this->mimeType ?? finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $this->getPath() );
     }
 
     /**
@@ -620,5 +645,79 @@ class File {
      */
     public function setMimeType( string $mimeType ) {
         $this->mimeType = $mimeType;
+    }
+
+    /**
+     * reads a file
+     *
+     * @return string
+     * @throws \Radiergummi\Foundation\Framework\Exception\FoundationException
+     */
+    public function read(): string {
+        try {
+            return file_get_contents( $this->getPath() );
+        }
+        catch ( FoundationException $exception ) {
+            throw new FileSystemException(
+                'Could not read file ' . $this->getPath(),
+                1,
+                $exception,
+                __FILE__,
+                __LINE__
+            );
+        }
+    }
+
+    /**
+     * writes a file
+     *
+     * @param string $content
+     *
+     * @return void
+     * @throws \Radiergummi\Foundation\Framework\Exception\FoundationException
+     */
+    public function write( string $content ) {
+        try {
+            file_put_contents( $this->getPath(), $content );
+        }
+        catch ( FoundationException $exception ) {
+            throw new FileSystemException(
+                'Could not write file ' . $this->getPath(),
+                1,
+                $exception,
+                __FILE__,
+                __LINE__
+            );
+        }
+    }
+
+    public function append( string $content ) {
+        try {
+            file_put_contents( $this->getPath(), $content, FILE_APPEND );
+        }
+        catch ( FoundationException $exception ) {
+            throw new FileSystemException(
+                'Could not write to file ' . $this->getPath(),
+                1,
+                $exception,
+                __FILE__,
+                __LINE__
+            );
+        }
+    }
+
+    public function delete() {
+        try {
+            unlink( $this->getPath() );
+        }
+        catch ( FoundationException $exception ) {
+            throw new FileSystemException(
+                'Could not delete file ' . $this->getPath(),
+                1,
+                $exception,
+                __FILE__,
+                __LINE__
+            );
+        }
     }
 }

@@ -6,11 +6,12 @@ use Radiergummi\Foundation\Framework\ClassCollector;
 use Radiergummi\Foundation\Framework\ComposerData;
 use Radiergummi\Foundation\Framework\Config\Exception\ConfigFileNotFoundException;
 use Radiergummi\Foundation\Framework\Config\Exception\UnknownConfigFileFormatException;
+use Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException;
+use Radiergummi\Foundation\Framework\FileSystem\File;
 use Radiergummi\Foundation\Framework\Utils\PathUtil;
 use function array_key_exists;
 use function array_merge;
 use function file_get_contents;
-use function file_put_contents;
 use function is_file;
 use function sprintf;
 
@@ -66,8 +67,8 @@ class ConfigProvider {
             throw new ConfigFileNotFoundException( 'No config file found at ' . $path );
         }
 
-        // retrieve the file extension
-        $extension = PathUtil::extension( $path );
+        $file      = new File( $path );
+        $extension = $file->getExtension();
 
         if ( array_key_exists( $extension, $this->adapters ) ) {
 
@@ -76,6 +77,7 @@ class ConfigProvider {
 
             // create the configuration instance
             $config = new Config( $data );
+            $config->setFile( $file );
             $config->setPath( $path );
 
             return $config;
@@ -92,18 +94,26 @@ class ConfigProvider {
      * @param \Radiergummi\Foundation\Framework\Config\Config $config
      *
      * @return void
+     * @throws \Radiergummi\Foundation\Framework\Exception\FoundationException
      */
     public function saveFile( Config $config ) {
 
         // retrieve the file extension
-        $extension = PathUtil::extension( $config->getPath() );
+        $extension = $config->getFile()->getExtension();
 
         if ( array_key_exists( $extension, $this->adapters ) ) {
 
             // encode the configuration data
             $encodedData = $this->adapters[ $extension ]::encode( $config->getData() );
 
-            file_put_contents( $config->getPath(), $encodedData );
+            try {
+                $config->getFile()->write( $encodedData );
+            }
+            catch ( FileSystemException $exception ) {
+
+                // TODO: Handle error
+                echo 'could not write config file';
+            }
         }
     }
 

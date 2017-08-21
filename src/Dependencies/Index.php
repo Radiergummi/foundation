@@ -4,6 +4,7 @@ namespace Radiergummi\Foundation\Framework\Dependencies;
 
 use Radiergummi\Foundation\Framework\Config\Config;
 use Radiergummi\Foundation\Framework\Config\ConfigProvider;
+use Radiergummi\Foundation\Framework\FileSystem\File;
 use Radiergummi\Foundation\Framework\Utils\PathUtil;
 use function is_file;
 
@@ -41,7 +42,7 @@ class Index {
      * @param string $path
      */
     public function __construct( string $path ) {
-        $this->path = $path;
+        $this->path           = $path;
         $this->configProvider = new ConfigProvider();
     }
 
@@ -54,6 +55,14 @@ class Index {
      */
     public function get( string $key ) {
         return $this->index->get( $key );
+    }
+
+    public function getLength() {
+        return count( $this->getAll() );
+    }
+
+    public function getAll() {
+        return $this->index->getData();
     }
 
     public function has( string $key ): bool {
@@ -83,10 +92,17 @@ class Index {
             }
         }
 
+        // no config file yet, create a new one
         $this->index = new Config();
-        $this->index->setPath( PathUtil::join( $this->path, 'index.json' ) );
+        $this->index->setFile( new File( PathUtil::join( $this->path, 'index.json' ) ) );
     }
 
+    /**
+     * saves the dependency index to file
+     *
+     * @return void
+     * @throws \Radiergummi\Foundation\Framework\Exception\FoundationException
+     */
     public function save() {
         $this->configProvider->saveFile( $this->index );
     }

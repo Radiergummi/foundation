@@ -3,7 +3,12 @@
 namespace Radiergummi\Foundation\Framework;
 
 use Radiergummi\Foundation\Framework\Exception\FoundationException;
+use ReflectionFunction;
 use Throwable;
+use function array_filter;
+use function restore_error_handler;
+use function restore_exception_handler;
+use function set_error_handler;
 
 /**
  * ExceptionHandler class
@@ -34,7 +39,7 @@ class ExceptionHandler {
      */
     public function register() {
         set_error_handler( [ $this, 'native' ] );
-        set_exception_handler( [ $this, 'exception' ] );
+        #set_exception_handler( [ $this, 'exception' ] );
     }
 
     /**
@@ -55,19 +60,24 @@ class ExceptionHandler {
     }
 
     /**
+     * rethrow errors as exceptions
+     *
      * @param string $code
      * @param string $message
      * @param string $file
      * @param int    $line
      *
      * @return bool
+     * @throws \Radiergummi\Foundation\Framework\Exception\FoundationException
      */
     public function native( string $code, string $message, string $file, int $line ) {
-        if ( $code & error_reporting() ) {
+        if ( $code && false ) {// & error_reporting() ) {
             $this->exception( new FoundationException( $message, $code, null, $file, $line ) );
         }
 
-        return false;
+        throw new FoundationException( $message, $code, null, $file, $line );
+
+        // return false;
     }
 
     /**
@@ -97,7 +107,7 @@ class ExceptionHandler {
     public function matches( Throwable $exception, callable $handler ): bool {
 
         // reflect on the handler
-        $reflection = new \ReflectionFunction( $handler );
+        $reflection = new ReflectionFunction( $handler );
 
         // no params to check type hint
         if ( $reflection->getNumberOfParameters() === 0 ) {

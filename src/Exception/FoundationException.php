@@ -6,6 +6,7 @@ use Exception;
 use JsonSerializable;
 use Radiergummi\Foundation\Framework\Utils\HashUtil;
 use Throwable;
+use function array_push;
 
 /** @noinspection PhpUndefinedClassInspection */
 
@@ -17,6 +18,23 @@ use Throwable;
  * @package Radiergummi\Foundation\Framework\Exception
  */
 class FoundationException extends Exception implements JsonSerializable, Throwable {
+
+    /**
+     * holds the tree of previous exceptions
+     *
+     * @var array
+     */
+    protected $tree = [];
+
+    /**
+     * FoundationException constructor
+     *
+     * @param string          $message  error message
+     * @param int             $code     error code
+     * @param \Exception|null $previous previous exception
+     * @param null            $file     file the exception was thrown in
+     * @param null            $line     line the exception was thrown on
+     */
     public function __construct(
         string $message,
         int $code = 0,
@@ -28,8 +46,24 @@ class FoundationException extends Exception implements JsonSerializable, Throwab
 
         $this->file = $file ?? $this->file;
         $this->line = $line ?? $this->line;
+
+        if ( $previous instanceof Throwable ) {
+            array_push( $this->tree, $previous );
+        }
     }
 
+    /**
+     * retrieves the FoundationException Tree
+     *
+     * @return array
+     */
+    public function getTree(): array {
+        return $this->tree;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function jsonSerialize() {
         return [
             'exception' => [

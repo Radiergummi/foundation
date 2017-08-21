@@ -3,13 +3,17 @@
 namespace Radiergummi\Foundation\Framework\Console;
 
 use Cilex\Application;
-use Exception;
 use Radiergummi\Foundation\Framework\ComposerData;
 use Radiergummi\Foundation\Framework\Exception\FoundationException;
 use Radiergummi\Foundation\Framework\ExceptionHandler;
 use Radiergummi\Foundation\Framework\Utils\PathUtil;
+use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\TableStyle;
+use const PHP_EOL;
 use function array_merge;
 use function explode;
+use function json_encode;
+use function str_repeat;
 use function ucfirst;
 
 /**
@@ -32,7 +36,7 @@ class Kernel {
      *
      * @var array|\Radiergummi\Foundation\Framework\ComposerData
      */
-    protected $config   = [];
+    protected $config = [];
 
     /**
      * holds the Cilex application
@@ -56,27 +60,52 @@ class Kernel {
         // TODO: Create error handler
         $this->app['errors'] = new ExceptionHandler();
 
-        $this->app['error-handler'] = function() {
-            return function( FoundationException $exception ) {
-                echo sprintf(
-                    'Error: %s at %s:%s',
+        /** @var ExceptionHandler */
+        $this->app['errors']->handler( function( FoundationException $exception ) {
+            $previousExceptions = $exception->getTree();
+            $tree               = '';
+
+            /** @var \Throwable $previousException */
+            foreach ( $previousExceptions as $index => $previousException ) {
+                $tree .= sprintf(
+                    '%s%s:%s' . PHP_EOL . '%s%s' . PHP_EOL,
+                    str_repeat( '  ', $index ),
+                    $previousException->getFile(),
+                    $previousException->getLine(),
+                    str_repeat( '  ', $index ),
+                    $previousException->getMessage()
+                );
+            }
+
+            echo PHP_EOL . sprintf(
+                    'Error: %s at %s:%s' . PHP_EOL . '%s',
                     $exception->getMessage(),
                     $exception->getFile(),
-                    $exception->getLine()
+                    $exception->getLine(),
+                    json_encode( $tree )
                 );
+            #  exit();
+        } );
 
-                exit();
-            };
-        };
+        $this->app['errors']->unregister();
+        $this->app['errors']->register();
 
-        /** @var ExceptionHandler */
-        $this->app['errors']->handler( $this->app['error-handler'] );
-
-        /** @var ExceptionHandler */
-        #$this->app['errors']->register();
+        $this->configureConsole();
 
         // load all commands
         $this->loadCommands();
+    }
+
+    protected function configureConsole() {
+        $tableStyle = new TableStyle();
+
+        $tableStyle
+            ->setCellHeaderFormat( '<fg=white>%s</>' )
+            ->setHorizontalBorderChar( '<fg=black>─</>' )
+            ->setVerticalBorderChar( '' )
+            ->setCrossingChar( '' );
+
+        Table::setStyleDefinition( 'default', $tableStyle );
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace Radiergummi\Foundation\Framework\Config;
 
 use ArrayAccess;
+use Radiergummi\Foundation\Framework\FileSystem\File;
 use Radiergummi\Foundation\Framework\Utils\ArrayUtil;
 
 /**
@@ -27,6 +28,13 @@ class Config implements ArrayAccess {
     protected $path = '';
 
     /**
+     * holds the configuration file
+     *
+     * @var File
+     */
+    protected $file;
+
+    /**
      * Config constructor
      *
      * @param array $data
@@ -45,16 +53,6 @@ class Config implements ArrayAccess {
     }
 
     /**
-     * retrieves the Config Data
-     *
-     * @return array
-     */
-    public function getData(): array {
-        return $this->data;
-    }
-
-
-    /**
      * sets the config file path
      *
      * @param string $path
@@ -63,6 +61,35 @@ class Config implements ArrayAccess {
      */
     public function setPath( string $path ) {
         $this->path = $path;
+    }
+
+    /**
+     * retrieves the config data
+     *
+     * @return array
+     */
+    public function getData(): array {
+        return $this->data;
+    }
+
+    /**
+     * retrieves the config file path
+     *
+     * @return \Radiergummi\Foundation\Framework\FileSystem\File
+     */
+    public function getFile(): File {
+        return $this->file ?? new File();
+    }
+
+    /**
+     * sets the configuration file on the file system
+     *
+     * @param \Radiergummi\Foundation\Framework\FileSystem\File $file
+     *
+     * @return void
+     */
+    public function setFile( File $file ) {
+        $this->file = $file;
     }
 
     /**
