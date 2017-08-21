@@ -23,6 +23,7 @@
     "symfony/yaml":                                "^3.3",
     "guzzlehttp/guzzle":                           "^6.3",
     "lastguest/murmurhash":                        "^1.3",
-    "composer/semver": "^1.4"
+    "composer/semver": "^1.4",
+    "peridot-php/leo": "^1.6"
   }
 }
