@@ -13,6 +13,7 @@ use function array_reverse;
 use function class_exists;
 use function explode;
 use function implode;
+use function is_dir;
 use function str_replace;
 
 /**
@@ -43,6 +44,10 @@ trait ClassCollector {
         $namespaceDirectory = $this->getNamespaceDirectory( $namespace );
 
         if ( ! $namespaceDirectory ) {
+            return [];
+        }
+
+        if ( ! is_dir( $namespaceDirectory ) ) {
             return [];
         }
 
