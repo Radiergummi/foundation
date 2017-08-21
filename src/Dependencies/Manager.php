@@ -15,6 +15,7 @@ use const FILEINFO_MIME_TYPE;
 use const PHP_EOL;
 use function finfo_open;
 use function is_string;
+use function strrchr;
 
 /**
  * Dependency Manager
@@ -245,9 +246,25 @@ class Manager {
         // 3. mime type from file:                      finfo_open(FILEINFO_MIME);
         // 4. mime type from Content-Type header:       <table lookup>
 
-        $fileType = finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $temporaryFilePath );
+        $fileType           = finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $temporaryFilePath );
+        $contentType        = $response->getHeader( 'Content-Type' )[0] ?? $fileType;
+        $mimeExtension      = substr( strrchr( $fileType, '/' ), 1 );
+        $remoteFilename     = PathUtil::basename( $remote );
+        $remoteExtension    = PathUtil::extension( $remoteFilename );
+        $contentDisposition = PathUtil::extension( substr( strrchr(
+                                                               $response->getHeader( 'Content-Disposition' )[0] ?? 'filename=' . $remoteFilename,
+                                                               '=' ), 1 ) );
 
-        $dependencyFile->setMimeType( $response->getHeader( 'Content-Type' )[0] ?? $fileType );
+        // try to validate any findings
+        if ( $remoteExtension === $contentDisposition ) {
+            $dependencyFile->setExtension( $remoteExtension );
+        } else if ( $mimeExtension === $remoteExtension || $mimeExtension === $contentDisposition ) {
+            $dependencyFile->setExtension( $mimeExtension );
+        } else if ( $fileType === $contentType ) {
+            $dependencyFile->setMimeType( $fileType );
+        } else {
+            $dependencyFile->setMimeType( $fileType );
+        }
 
         try {
             PathUtil::create( PathUtil::join(
@@ -339,8 +356,32 @@ class Manager {
      * @param \Radiergummi\Foundation\Framework\Dependencies\Dependency $dependency dependency to remove
      *
      * @return void
+     * @throws \Radiergummi\Foundation\Framework\Exception\FoundationException
      */
     public function remove( Dependency $dependency ) {
-        $this->getIndex()->get( sprintf( '%s.local', $dependency->getName() ) );
+        if ( $this->has( $dependency ) ) {
+            $dependencyFile = new File( $this->getIndex()->get( sprintf( '%s.local', $dependency->getName() ) ) );
+
+            // try to delete the local file
+            try {
+                $dependencyFile->delete();
+            }
+            catch ( FileSystemException $exception ) {
+                throw new FoundationException( sprintf(
+                                                   'Could not delete the local file %s: %s',
+                                                   $dependencyFile->getPath(),
+                                                   $exception->getMessage()
+                                               ) );
+            }
+
+            // remove the dependency from the index
+            $this->getIndex()->remove( $dependency->getName() );
+            $this->getIndex()->save();
+
+            return;
+        }
+
+        // unknown dependency, throw error
+        throw new FoundationException( sprintf( '%s is not installed', $dependency->getName() ) );
     }
 }

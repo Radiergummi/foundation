@@ -73,6 +73,10 @@ class Index {
         $this->index->set( $key, $value );
     }
 
+    public function remove( string $key ) {
+        $this->index->remove( $key );
+    }
+
     /**
      * loads the index file
      *

@@ -3,9 +3,10 @@
 use Radiergummi\Foundation\Framework\Dependencies\Dependency;
 use Radiergummi\Foundation\Framework\Dependencies\Exception\DependencyDownloadException;
 use Radiergummi\Foundation\Framework\Dependencies\Manager as DependencyManager;
+use Radiergummi\Foundation\Framework\Exception\FoundationException;
 use Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException;
 
-xdescribe( 'DependencyManager', function() {
+describe( 'DependencyManager', function() {
     beforeEach( function() {
         /** @noinspection SpellCheckingInspection */
         $this->testFileSource = 'http://ipv4.download.thinkbroadband.com/5MB.zip';
@@ -116,6 +117,48 @@ xdescribe( 'DependencyManager', function() {
         expect( $newTestDependency->getLocal() )->to->satisfy( 'is_file' );
 
         resetTemporaryDirectories( $this->storagePath, $newTestDependency->getType() );
+    } );
+
+    it( 'should remove a dependency', function() {
+        $manager = new DependencyManager(
+            $this->storagePath,
+            $this->cachePath
+        );
+
+        // add in a mock outputInterface
+        $manager->setOutputStream( new Symfony\Component\Console\Output\NullOutput() );
+
+        $testDependency = new Dependency(
+            'test',
+            '1.0.0',
+            $this->testFileSource
+        );
+
+        $manager->add( $testDependency );
+        $manager->remove( $testDependency );
+
+        expect( $manager->has( $testDependency ) )
+            ->to->be->false();
+
+        resetTemporaryDirectories( $this->storagePath, $testDependency->getType() );
+    } );
+
+    it( 'should throw on removing a non-installed dependency', function() {
+        $manager = new DependencyManager(
+            $this->storagePath,
+            $this->cachePath
+        );
+
+        $testDependency = new Dependency(
+            'test',
+            '1.0.0',
+            $this->testFileSource
+        );
+
+        /** @noinspection PhpParamsInspection */
+        expect( [ $manager, 'remove' ] )
+            ->with( $testDependency )
+            ->to->throw( FoundationException::class );
     } );
 } );
 

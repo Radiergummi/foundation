@@ -3,8 +3,7 @@
 namespace Radiergummi\Foundation\Framework;
 
 use Radiergummi\Foundation\Framework\Utils\PathUtil;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
+use SplFileInfo;
 use function array_filter;
 use function array_key_exists;
 use function array_map;
@@ -43,24 +42,15 @@ trait ClassCollector {
     public function getClassesInNamespace( string $namespace ): array {
         $namespaceDirectory = $this->getNamespaceDirectory( $namespace );
 
-        if ( ! $namespaceDirectory ) {
+        // if the directory is invalid (non existent, wrong type) return an empty array
+        if ( ( ! $namespaceDirectory ) || ( ! is_dir( $namespaceDirectory ) ) ) {
             return [];
         }
-
-        if ( ! is_dir( $namespaceDirectory ) ) {
-            return [];
-        }
-
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator( $namespaceDirectory, RecursiveDirectoryIterator::SKIP_DOTS ),
-            RecursiveIteratorIterator::SELF_FIRST,
-            RecursiveIteratorIterator::CATCH_GET_CHILD
-        );
 
         $files = [];
 
-        /** @var \SplFileInfo $file */
-        foreach ( $iterator as $file ) {
+        // iterate over the namespace directory, collect class names
+        PathUtil::iterate( $namespaceDirectory, function( SplFileInfo $file ) use ( &$files, $namespaceDirectory ) {
             if ( ! $file->isDir() ) {
                 $files[] = str_replace(
                     DIRECTORY_SEPARATOR,
@@ -68,13 +58,15 @@ trait ClassCollector {
                     substr( $file->getPathname(), strlen( $namespaceDirectory ) + 1 )
                 );
             }
-        }
+        } );
 
-        $classes = array_map( function( $file ) use ( $namespace ) {
+        // remove the file extension
+        $classes = array_map( function( string $file ) use ( $namespace ): string {
             return $namespace . '\\' . str_replace( '.php', '', $file );
         }, $files );
 
-        return array_filter( $classes, function( $possibleClass ) {
+        // remove all non-class files by checking if the associated class is registered
+        return array_filter( $classes, function( string $possibleClass ): bool {
             return class_exists( $possibleClass );
         } );
     }

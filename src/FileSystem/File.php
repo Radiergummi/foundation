@@ -17,8 +17,8 @@ use function unlink;
  * properties and path, and provides try-catched methods for all operations. On any error, a FileSystemException
  * is thrown that I may extend to either specific ones (FileNotFoundException, AccessDeniedException and so on), or
  * map their error code to common unix error codes.
- * The advantage in using File lies in the error and status handling: None of the "setter" methods return a boolean, if
- * something breaks, it throws an exception, no warnings. That makes the code way more predictable.
+ * The advantage in using File lies in the error and status handling: None of the "setter" methods return a boolean,
+ * if something breaks, it throws an exception, no warnings. That makes the code way more predictable.
  * Besides, you don't have to use clumsy PHP methods all over your code.
  *
  * @package Radiergummi\Foundation\Framework\FileSystem

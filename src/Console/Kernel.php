@@ -52,6 +52,7 @@ class Kernel {
 
         $this->config = new ComposerData( PathUtil::normalize( '../../composer.json' ) );
 
+        // retrieve the application name from composer.json, remove the "username/" part
         $appName = ucfirst( explode( '/', $this->config->get( 'name' ) )[1] );
 
         // create the application
