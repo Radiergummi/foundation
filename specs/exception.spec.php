@@ -15,7 +15,8 @@ describe( 'Exceptions', function() {
             $exception = $foundationException;
         }
 
-        assert( $exception instanceof FoundationException );
+        expect( $exception )
+            ->to->be->an->instanceof( FoundationException::class );
     } );
 
     it( 'should have an error ID', function() {
@@ -28,9 +29,10 @@ describe( 'Exceptions', function() {
             $errorId = $foundationException->getErrorId();
         }
 
-        assert( $errorId === HashUtil::hash(
-                    'Radiergummi\\Foundation\\Framework\\Exception\\FoundationException' . __FILE__,
-                    HashUtil::METHOD_MD5
-                ) );
+        expect( $errorId )
+            ->to->equal( HashUtil::hash(
+                'Radiergummi\\Foundation\\Framework\\Exception\\FoundationException' . __FILE__,
+                HashUtil::METHOD_MD5
+            ) );
     } );
 } );

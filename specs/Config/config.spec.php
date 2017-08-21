@@ -34,112 +34,100 @@ describe( 'Config', function() {
     // get
     describe( 'get', function() {
         it( 'should get a value', function() {
-            $keyName       = 'first_string';
-            $expectedValue = 'foo';
-
-            assert( $this->config->get( $keyName ) === $expectedValue );
+            expect( $this->config->get( 'first_string' ) )
+                ->to->equal( 'foo' );
         } );
 
         it( 'should get a nested value', function() {
-            $keyName       = 'fourth_nested.first_float';
-            $expectedValue = 3.14;
-
-            assert( $this->config->get( $keyName ) === $expectedValue );
+            expect( $this->config->get( 'fourth_nested.first_float' ) )
+                ->to->equal( 3.14 );
         } );
 
         it( 'should return the fallback on wrong key name', function() {
-            $expectedValue = 'not_existing_value';
-
-            assert( $this->config->get( 'not_existing', $expectedValue ) === $expectedValue );
+            expect( $this->config->get( 'not_existing', 'not_existing_value' ) )
+                ->to->equal( 'not_existing_value' );
         } );
 
         it( 'should return null on wrong key name without fallback', function() {
-            assert( $this->config->get( 'not_existing' ) === null );
+            expect( $this->config->get( 'not_existing' ) )
+                ->to->be->null();
         } );
     } );
 
     // has
     describe( 'has', function() {
         it( 'should determine whether a key exists', function() {
-            $keyName = 'third_int';
-
-            assert( $this->config->has( $keyName ) === true );
+            expect( $this->config->has( 'third_int' ) )
+                ->to->be->true();
         } );
 
         it( 'should determine whether a nested key exists', function() {
-            $keyName = 'fourth_nested.second_bool';
-
-            assert( $this->config->has( $keyName ) === true );
+            expect( $this->config->has( 'fourth_nested.second_bool' ) )
+                ->to->be->true();
         } );
 
         it( 'should return false on a non existent key', function() {
-            $keyName = 'not_existing';
-
-            assert( $this->config->has( $keyName ) === false );
+            expect( $this->config->has( 'not_existing' ) )
+                ->to->be->false();
         } );
 
         it( 'should return false on a non existent nested key', function() {
-            $keyName = 'foo.bar.baz.quz';
-
-            assert( $this->config->has( $keyName ) === false );
+            expect( $this->config->has( 'foo.bar.baz.quz' ) )
+                ->to->be->false();
         } );
     } );
 
     // set
     describe( 'set', function() {
         it( 'should set a value on a non existent key', function() {
-            $keyName = 'not_existing_previously';
-            $value   = time();
+            $expectedValue = time();
 
-            $this->config->set( $keyName, $value );
+            $this->config->set( 'not_existing_previously', $expectedValue );
 
-            assert( $this->config->get( $keyName ) === $value );
+            expect( $this->config->get( 'not_existing_previously' ) )
+                ->to->equal( $expectedValue );
         } );
 
         it( 'should set a value on an existent key', function() {
-            $keyName = 'first_string';
-            $value   = 'bar';
+            $this->config->set( 'first_string', 'bar' );
 
-            $this->config->set( $keyName, $value );
-
-            assert( $this->config->get( $keyName ) === $value );
+            expect( $this->config->get( 'first_string' ) )
+                ->to->equal( 'bar' );
         } );
 
         it( 'should set a value on a non existent nested key', function() {
-            $keyName = 'not.existing.previously';
-            $value   = time();
+            $expectedValue = time();
 
-            $this->config->set( $keyName, $value );
+            $this->config->set( 'not.existing.previously', $expectedValue );
 
-            assert( $this->config->get( $keyName ) === $value );
+            expect( $this->config->get( 'not.existing.previously' ) )
+                ->to->equal( $expectedValue );
         } );
 
         it( 'should set a value on an existent nested key', function() {
-            $keyName = 'fourth_nested.second_bool';
-            $value   = time();
+            $expectedValue = time();
 
-            $this->config->set( $keyName, $value );
+            $this->config->set( 'fourth_nested.second_bool', $expectedValue );
 
-            assert( $this->config->get( $keyName ) === $value );
+            expect( $this->config->get( 'fourth_nested.second_bool' ) )
+                ->to->equal( $expectedValue );
         } );
     } );
 
     // remove
     describe( 'remove', function() {
         it( 'should remove a key', function() {
-            $keyName = 'first_string';
+            $this->config->remove( 'first_string' );
 
-            $this->config->remove( $keyName );
-
-            assert( $this->config->get( $keyName ) === null );
+            expect( $this->config->get( 'first_string' ) )
+                ->to->be->null();
         } );
 
         it( 'should remove a nested key', function() {
-            $keyName = 'fourth_nested.third_nested.first_string';
+            $this->config->remove( 'fourth_nested.third_nested.first_string' );
 
-            $this->config->remove( $keyName );
-
-            assert( $this->config->get( $keyName ) === null );
+            expect( $this->config->get( 'fourth_nested.third_nested.first_string' ) )
+                ->to->be->null();
         } );
     } );
 
@@ -147,150 +135,130 @@ describe( 'Config', function() {
     describe( 'magic methods', function() {
 
         it( 'should get a value using __get', function() {
-            $keyName       = 'first_string';
-            $expectedValue = 'foo';
-
-            assert( $this->config->$keyName === $expectedValue );
+            expect( $this->config->{'first_string'} )
+                ->to->equal( 'foo' );
         } );
 
         it( 'should get a nested value using __get', function() {
-            $keyName       = 'fourth_nested.third_nested.first_string';
-            $expectedValue = 'bar';
-
-            assert( $this->config->$keyName === $expectedValue );
+            expect( $this->config->{'fourth_nested.third_nested.first_string'} )
+                ->to->equal( 'bar' );
         } );
 
         it( 'should set a value using __set', function() {
-            $keyName       = 'first_string';
             $expectedValue = time();
 
-            $this->config->$keyName = $expectedValue;
+            $this->config->{'first_string'} = $expectedValue;
 
-            assert( $this->config->$keyName === $expectedValue );
+            expect( $this->config->{'first_string'} )
+                ->to->equal( $expectedValue );
         } );
 
         it( 'should set a nested value using __set', function() {
-            $keyName       = 'fourth_nested.third_nested.first_string';
             $expectedValue = time();
 
-            $this->config->$keyName = $expectedValue;
+            $this->config->{'fourth_nested.third_nested.first_string'} = $expectedValue;
 
-            assert( $this->config->$keyName === $expectedValue );
+            expect( $this->config->{'fourth_nested.third_nested.first_string'} )
+                ->to->equal( $expectedValue );
         } );
 
         it( 'should determine whether a key exists using __isset', function() {
-            $keyName = 'first_string';
-
-            assert( isset( $this->config->$keyName ) );
+            expect( isset( $this->config->{'first_string'} ) )
+                ->to->be->true();
         } );
 
         it( 'should determine whether a nested key exists using __isset', function() {
-            $keyName = 'fourth_nested.third_nested.first_string';
-
-            assert( isset( $this->config->$keyName ) );
+            expect( isset( $this->config->{'fourth_nested.third_nested.first_string'} ) )
+                ->to->be->true();
         } );
 
         it( 'should return false on a non existent key using __isset', function() {
-            $keyName = 'not_existing';
-
-            assert( isset( $this->config->$keyName ) === false );
+            expect( isset( $this->config->{'not_existing'} ) )
+                ->to->be->false();
         } );
 
         it( 'should return false on a non existent nested key using __isset', function() {
-            $keyName = 'foo.bar.baz.quz';
-
-            assert( isset( $this->config->$keyName ) === false );
+            expect( isset( $this->config->{'foo.bar.baz.quz'} ) )
+                ->to->be->false();
         } );
 
         it( 'should remove a key using __unset', function() {
-            $keyName = 'first_string';
+            unset( $this->config->{'first_string'} );
 
-            unset( $this->config->$keyName );
-
-            assert( $this->config->get( $keyName ) === null );
+            expect( $this->config->get( 'first_string' ) )
+                ->to->be->null();
         } );
 
         it( 'should remove a nested key using __unset', function() {
-            $keyName = 'fourth_nested.third_nested.first_string';
+            unset( $this->config->{'fourth_nested.third_nested.first_string'} );
 
-            unset( $this->config->$keyName );
-
-            assert( $this->config->get( $keyName ) === null );
+            expect( $this->config->get( 'fourth_nested.third_nested.first_string' ) )
+                ->to->be->null();
         } );
     } );
 
     // array access
     describe( 'array access', function() {
         it( 'should get a value using array syntax', function() {
-            $keyName       = 'first_string';
-            $expectedValue = 'foo';
-
-            assert( $this->config[ $keyName ] === $expectedValue );
+            expect( $this->config['first_string'] )
+                ->to->equal( 'foo' );
         } );
 
         it( 'should get a nested value using array syntax', function() {
-            $keyName       = 'fourth_nested.third_nested.first_string';
-            $expectedValue = 'bar';
-
-            assert( $this->config[ $keyName ] === $expectedValue );
+            expect( $this->config['fourth_nested.third_nested.first_string'] )
+                ->to->equal( 'bar' );
         } );
 
         it( 'should set a value using array syntax', function() {
-            $keyName       = 'first_string';
             $expectedValue = time();
 
-            $this->config[ $keyName ] = $expectedValue;
+            $this->config['first_string'] = $expectedValue;
 
-            assert( $this->config[ $keyName ] === $expectedValue );
+            expect( $this->config['first_string'] )
+                ->to->equal( $expectedValue );
         } );
 
         it( 'should set a nested value using array syntax', function() {
-            $keyName       = 'fourth_nested.third_nested.first_string';
             $expectedValue = time();
 
-            $this->config[ $keyName ] = $expectedValue;
+            $this->config['fourth_nested.third_nested.first_string'] = $expectedValue;
 
-            assert( $this->config[ $keyName ] === $expectedValue );
+            expect( $this->config['fourth_nested.third_nested.first_string'] )
+                ->to->equal( $expectedValue );
         } );
 
         it( 'should determine whether a key exists using array syntax', function() {
-            $keyName = 'first_string';
-
-            assert( isset( $this->config[ $keyName ] ) );
+            expect( isset( $this->config['first_string'] ) )
+                ->to->be->true();
         } );
 
         it( 'should determine whether a nested key exists using array syntax', function() {
-            $keyName = 'fourth_nested.third_nested.first_string';
-
-            assert( isset( $this->config[ $keyName ] ) );
+            expect( isset( $this->config['fourth_nested.third_nested.first_string'] ) )
+                ->to->be->true();
         } );
 
         it( 'should return false on a non existent key using array syntax', function() {
-            $keyName = 'not_existing';
-
-            assert( isset( $this->config[ $keyName ] ) === false );
+            expect( isset( $this->config['not_existing'] ) )
+                ->to->be->false();
         } );
 
         it( 'should return false on a non existent nested key using array syntax', function() {
-            $keyName = 'foo.bar.baz.quz';
-
-            assert( isset( $this->config[ $keyName ] ) === false );
+            expect( isset( $this->config['foo.bar.baz.quz'] ) )
+                ->to->be->false();
         } );
 
         it( 'should remove a key using array syntax', function() {
-            $keyName = 'first_string';
+            unset( $this->config['first_string'] );
 
-            unset( $this->config[ $keyName ] );
-
-            assert( $this->config->get( $keyName ) === null );
+            expect( $this->config->get( 'first_string' ) )
+                ->to->be->null();
         } );
 
         it( 'should remove a nested key using array syntax', function() {
-            $keyName = 'fourth_nested.third_nested.first_string';
+            unset( $this->config['fourth_nested.third_nested.first_string'] );
 
-            unset( $this->config[ $keyName ] );
-
-            assert( $this->config->get( $keyName ) === null );
+            expect( $this->config->get( 'fourth_nested.third_nested.first_string' ) )
+                ->to->be->null();
         } );
     } );
 } );
@@ -299,203 +267,167 @@ describe( 'ConfigProvider', function() {
     describe( 'Adapters', function() {
         describe( 'JSON adapter', function() {
             it( 'should support .json files', function() {
-                assert( JsonAdapter::getSupportedFileFormat() === 'json' );
+                expect( JsonAdapter::getSupportedFileFormat() )
+                    ->to->equal( 'json' );
             } );
 
             it( 'should decode JSON strings', function() {
-                $data          = '{"foo":"bar"}';
-                $expectedValue = [ 'foo' => 'bar' ];
-
-                assert( JsonAdapter::decode( $data ) === $expectedValue );
+                expect( JsonAdapter::decode( '{"foo":"bar"}' ) )
+                    ->to->equal( [ 'foo' => 'bar' ] );
             } );
 
             it( 'should throw on malformed JSON', function() {
-                $malformed = '{foo:`bar`}';
-                $exception = null;
 
-                try {
-                    JsonAdapter::decode( $malformed );
-                }
-                catch ( InvalidConfigFileException $configFileException ) {
-                    $exception = $configFileException;
-                }
-
-                assert( $exception instanceof InvalidConfigFileException );
+                /** @noinspection PhpParamsInspection */
+                expect( [ JsonAdapter::class, 'decode' ] )
+                    ->with( '{foo:`bar`}' )
+                    ->to->throw( InvalidConfigFileException::class );
             } );
 
             it( 'should encode arrays', function() {
-                $data          = [ 'foo' => 'bar' ];
-                $expectedValue = "{\n    \"foo\": \"bar\"\n}";
 
-                assert( JsonAdapter::encode( $data ) === $expectedValue );
+                /** @noinspection PhpParamsInspection */
+                expect( JsonAdapter::encode( [ 'foo' => 'bar' ] ) )
+                    ->to->equal( "{\n    \"foo\": \"bar\"\n}" );
             } );
         } );
 
         describe( 'YAML adapter', function() {
             it( 'should support .yml files', function() {
-                assert( YamlAdapter::getSupportedFileFormat() === 'yml' );
+                expect( YamlAdapter::getSupportedFileFormat() )
+                    ->to->equal( 'yml' );
             } );
 
             it( 'should decode YAML strings', function() {
-                $data          = 'foo: bar';
-                $expectedValue = [ 'foo' => 'bar' ];
-
-                assert( YamlAdapter::decode( $data ) === $expectedValue );
+                expect( YamlAdapter::decode( 'foo: bar' ) )
+                    ->to->equal( [ 'foo' => 'bar' ] );
             } );
 
             it( 'should throw on malformed YAML', function() {
-                $malformed = '{foo:`bar`}';
-                $exception = null;
 
-                try {
-                    YamlAdapter::decode( $malformed );
-                }
-                catch ( InvalidConfigFileException $configFileException ) {
-                    $exception = $configFileException;
-                }
-
-                assert( $exception instanceof InvalidConfigFileException );
+                /** @noinspection PhpParamsInspection */
+                expect( [ YamlAdapter::class, 'decode' ] )
+                    ->with( '{foo:`bar`}' )
+                    ->to->throw( InvalidConfigFileException::class );
             } );
 
             it( 'should encode arrays', function() {
-                $data          = [ 'foo' => 'bar' ];
-                $expectedValue = "foo: bar\n";
-
-                assert( YamlAdapter::encode( $data ) === $expectedValue );
+                expect( YamlAdapter::encode( [ 'foo' => 'bar' ] ) )
+                    ->to->equal( "foo: bar\n" );
             } );
         } );
 
         describe( 'INI adapter', function() {
             it( 'should support .ini files', function() {
-                assert( IniAdapter::getSupportedFileFormat() === 'ini' );
+                expect( IniAdapter::getSupportedFileFormat() )
+                    ->to->equal( 'ini' );
             } );
 
             it( 'should decode INI strings', function() {
-                $data          = 'foo="bar"';
-                $expectedValue = [ 'foo' => 'bar' ];
-
-                assert( IniAdapter::decode( $data ) === $expectedValue );
+                expect( IniAdapter::decode( 'foo="bar"' ) )
+                    ->to->equal( [ 'foo' => 'bar' ] );
             } );
 
             it( 'should throw on malformed INI', function() {
-                $malformed = 'foo="bar';
-                $exception = null;
 
-                try {
-                    IniAdapter::decode( $malformed );
-                }
-                catch ( InvalidConfigFileException $configFileException ) {
-                    $exception = $configFileException;
-                }
-
-                assert( $exception instanceof InvalidConfigFileException );
+                /** @noinspection PhpParamsInspection */
+                expect( [ IniAdapter::class, 'decode' ] )
+                    ->with( 'foo="bar' )
+                    ->to->throw( InvalidConfigFileException::class );
             } );
 
             it( 'should encode arrays', function() {
-                $data          = [ 'foo' => 'bar' ];
-                $expectedValue = "foo=bar\n";
-
-                assert( IniAdapter::encode( $data ) === $expectedValue );
+                expect( IniAdapter::encode( [ 'foo' => 'bar' ] ) )
+                    ->to->equal( "foo=bar\n" );
             } );
         } );
 
         describe( 'PHP adapter', function() {
             it( 'should support .php files', function() {
-                assert( PhpAdapter::getSupportedFileFormat() === 'php' );
+                expect( PhpAdapter::getSupportedFileFormat() )
+                    ->to->equal( 'php' );
             } );
 
             it( 'should decode PHP strings', function() {
-                $data          = '<?php return [ "foo" => "bar"];';
-                $expectedValue = [ 'foo' => 'bar' ];
+                expect( PhpAdapter::decode( '<?php return [ "foo" => "bar"];' ) )
+                    ->to->equal( [ 'foo' => 'bar' ] );
 
-                assert( PhpAdapter::decode( $data ) === $expectedValue );
-            } );
+                it( 'should throw on malformed PHP', function() {
 
-            it( 'should throw on malformed PHP', function() {
-                $malformed = '<?php throw new "nope";';
-                $exception = null;
+                    /** @noinspection PhpParamsInspection */
+                    expect( [ PhpAdapter::class, 'decode' ] )
+                        ->with( '<?php throw new "nope";' )
+                        ->to->throw( InvalidConfigFileException::class );
+                } );
 
-                try {
-                    PhpAdapter::decode( $malformed );
-                }
-                catch ( InvalidConfigFileException $configFileException ) {
-                    $exception = $configFileException;
-                }
-
-                assert( $exception instanceof InvalidConfigFileException );
-            } );
-
-            it( 'should encode arrays', function() {
-                $data          = [ 'foo' => 'bar' ];
-                $expectedValue = "<?php return array (\n  'foo' => 'bar',\n);";
-
-                assert( PhpAdapter::encode( $data ) === $expectedValue );
+                it( 'should encode arrays', function() {
+                    expect( PhpAdapter::encode( [ 'foo' => 'bar' ] ) )
+                        ->to->equal( "<?php return array (\n  'foo' => 'bar',\n);" );
+                } );
             } );
         } );
-    } );
 
-    describe( 'Loader', function() {
-        beforeEach( function() {
-            $this->loader = new ConfigProvider();
-        } );
+        describe( 'Loader', function() {
+            beforeEach( function() {
+                $this->loader = new ConfigProvider();
+            } );
 
-        it( 'should instantiate', function() {
-            assert( $this->loader instanceof ConfigProvider );
-        } );
+            it( 'should instantiate', function() {
+                expect( $this->loader )
+                    ->to->be->an->instanceof( ConfigProvider::class );
+            } );
 
-        it( 'should discover the default JSON adapter', function() {
-            $loaders = $this->loader->getAdapters();
+            it( 'should discover the default JSON adapter', function() {
+                $loaders = $this->loader->getAdapters();
 
-            assert( $loaders[ JsonAdapter::getSupportedFileFormat() ] === JsonAdapter::class );
-        } );
+                expect( $loaders )
+                    ->to->have->a->property( JsonAdapter::getSupportedFileFormat(), JsonAdapter::class );
+            } );
 
-        it( 'should discover the default YAML adapter', function() {
-            $loaders = $this->loader->getAdapters();
+            it( 'should discover the default YAML adapter', function() {
+                $loaders = $this->loader->getAdapters();
 
-            assert( $loaders[ YamlAdapter::getSupportedFileFormat() ] === YamlAdapter::class );
-        } );
+                expect( $loaders )
+                    ->to->have->a->property( YamlAdapter::getSupportedFileFormat(), YamlAdapter::class );
+            } );
 
-        it( 'should discover the default INI adapter', function() {
-            $loaders = $this->loader->getAdapters();
+            it( 'should discover the default INI adapter', function() {
+                $loaders = $this->loader->getAdapters();
 
-            assert( $loaders[ IniAdapter::getSupportedFileFormat() ] === IniAdapter::class );
-        } );
+                expect( $loaders )
+                    ->to->have->a->property( IniAdapter::getSupportedFileFormat(), IniAdapter::class );
+            } );
 
-        it( 'should discover the default PHP adapter', function() {
-            $loaders = $this->loader->getAdapters();
+            it( 'should discover the default PHP adapter', function() {
+                $loaders = $this->loader->getAdapters();
 
-            assert( $loaders[ PhpAdapter::getSupportedFileFormat() ] === PhpAdapter::class );
-        } );
+                expect( $loaders )
+                    ->to->have->a->property( PhpAdapter::getSupportedFileFormat(), PhpAdapter::class );
+            } );
 
-        it( 'should return a Config object', function() {
-            $testFile = __DIR__ . '/../../composer.json';
-            assert( $this->loader->loadFile( $testFile ) instanceof Config );
-        } );
+            it( 'should return a Config object', function() {
+                $testFile = __DIR__ . '/../../composer.json';
 
-        it( 'should throw on non existent file', function() {
-            $exception = null;
+                expect( $this->loader->loadFile( $testFile ) )
+                    ->to->be->an->instanceof( Config::class );
+            } );
 
-            try {
-                $this->loader->loadFile( 'nope' );
-            }
-            catch ( ConfigFileNotFoundException $configFileNotFoundException ) {
-                $exception = $configFileNotFoundException;
-            }
-            assert( $exception instanceof ConfigFileNotFoundException );
-        } );
+            it( 'should throw on non existent file', function() {
 
-        it( 'should throw on unknown config file format', function() {
-            $unknownFormatFilePath = realpath( __DIR__ . '/../../README.md' );
-            $exception             = null;
+                /** @noinspection PhpParamsInspection */
+                expect( [ $this->loader, 'loadFile' ] )
+                    ->with( 'nope' )
+                    ->to->throw( ConfigFileNotFoundException::class );
+            } );
 
-            try {
-                $this->loader->loadFile( $unknownFormatFilePath );
-            }
-            catch ( UnknownConfigFileFormatException $configFileFormatException ) {
-                $exception = $configFileFormatException;
-            }
+            it( 'should throw on unknown config file format', function() {
+                $unknownFormatFilePath = realpath( __DIR__ . '/../../README.md' );
 
-            assert( $exception instanceof UnknownConfigFileFormatException );
+                /** @noinspection PhpParamsInspection */
+                expect( [ $this->loader, 'loadFile' ] )
+                    ->with( $unknownFormatFilePath )
+                    ->to->throw( UnknownConfigFileFormatException::class );
+            } );
         } );
     } );
 } );
