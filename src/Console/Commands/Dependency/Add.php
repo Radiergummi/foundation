@@ -11,6 +11,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
+use function sprintf;
 
 /**
  * Add dependency command
@@ -45,6 +46,9 @@ class Add extends Command {
         $dependencyManager = new DependencyManager();
         $dependencyManager->setOutputStream( $output );
 
+        /** @var \Symfony\Component\Console\Helper\QuestionHelper $helper */
+        $helper = $this->getHelper( 'question' );
+
         $dependency = new Dependency(
             $input->getArgument( 'name' ),
             $input->getOption( 'release' ) ?? '',
@@ -52,8 +56,24 @@ class Add extends Command {
         );
 
         // check if we have that dependency already
-        if ( $dependencyManager->getIndex()->has( $dependency->getName() ) ) {
-            $currentVersion = $dependencyManager->getIndex()->get( sprintf( '%s.version', $dependency->getName() ) );
+        if ( $dependencyManager->has( $dependency ) ) {
+            $currentVersion = $dependencyManager->getVersion( $dependency );
+
+            if ( VersionComparator::equalTo( $dependency->getVersion(), $currentVersion ) ) {
+                $output->writeln( sprintf(
+                                      '%s is already available in version %s',
+                                      $dependency->getName(),
+                                      $currentVersion
+                                  ) );
+
+                $renew = $helper->ask( $input, $output, new ConfirmationQuestion( 'should the dependency be renewed? [y|N] ', false ) );
+
+                if ( $renew ) {
+                    $dependencyManager->update( $dependency );
+                }
+
+                return;
+            }
 
             // dependency exists already, check version
             if ( VersionComparator::greaterThan( $dependency->getVersion(), $currentVersion ) ) {
@@ -84,9 +104,6 @@ class Add extends Command {
                                   $dependency->getVersion(),
                                   $currentVersion
                               ) );
-
-            /** @var \Symfony\Component\Console\Helper\QuestionHelper $helper */
-            $helper = $this->getHelper( 'question' );
 
             $downgrade = $helper->ask( $input, $output, new ConfirmationQuestion( 'should the package be downgraded? [y|N] ', false ) );
 

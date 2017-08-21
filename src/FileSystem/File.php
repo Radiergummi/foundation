@@ -8,10 +8,18 @@ use Radiergummi\Foundation\Framework\Utils\PathUtil;
 use const FILE_APPEND;
 use function file_get_contents;
 use function file_put_contents;
+use function is_file;
 use function unlink;
 
 /**
  * File class
+ * The File class serves as a convenient CRUD wrapper around filesystem entities. It keeps track of the file's
+ * properties and path, and provides try-catched methods for all operations. On any error, a FileSystemException
+ * is thrown that I may extend to either specific ones (FileNotFoundException, AccessDeniedException and so on), or
+ * map their error code to common unix error codes.
+ * The advantage in using File lies in the error and status handling: None of the "setter" methods return a boolean, if
+ * something breaks, it throws an exception, no warnings. That makes the code way more predictable.
+ * Besides, you don't have to use clumsy PHP methods all over your code.
  *
  * @package Radiergummi\Foundation\Framework\FileSystem
  */
@@ -531,12 +539,90 @@ class File {
     protected $extension;
 
     /**
+     * whether the file is virtual or physical
+     *
+     * @var bool
+     */
+    protected $isVirtual = true;
+
+    /**
      * File constructor
      *
      * @param string $path
      */
-    public function __construct( string $path = '' ) {
-        $this->setPath( $path );
+    public function __construct( string $path = null ) {
+        if ( $path && is_file( $path ) ) {
+            $this->setIsVirtual( false );
+        }
+
+        $this->setPath( $path ?? '' );
+    }
+
+    /**
+     * copies the file
+     *
+     * @param string $destinationPath path to copy the file to
+     *
+     * @return void
+     */
+    public function copy( string $destinationPath ) {
+        copy( $this->getPath(), $destinationPath );
+    }
+
+    /**
+     * retrieves the file extension
+     *
+     * @return string
+     */
+    public function getExtension(): string {
+        return $this->extension ?? $this->getExtensionByMimeType();
+    }
+
+    /**
+     * sets the file extension
+     *
+     * @param string $extension new file extension, without dot
+     *
+     * @throws \Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException
+     */
+    public function setExtension( string $extension ) {
+        $this->extension = $extension;
+
+        // if the file is physical, we need to change the extension on the actual file as well
+        if ( ! $this->isVirtual() ) {
+            $this->rename( PathUtil::basename( $this->getPath(), $this->getExtension() ) . '.' . $extension );
+        }
+    }
+
+    /**
+     * checks whether the file is virtual
+     *
+     * @return bool
+     */
+    public function isVirtual(): bool {
+        return $this->isVirtual;
+    }
+
+    /**
+     * marks the file as virtual
+     *
+     * @param bool $virtual
+     */
+    public function setIsVirtual( bool $virtual ) {
+        $this->isVirtual = $virtual;
+    }
+
+    /**
+     * renames the file
+     *
+     * @param string $newName new file name
+     *
+     * @return void
+     * @throws \Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException
+     */
+    public function rename( string $newName ) {
+        $destinationPath = PathUtil::join( PathUtil::directory( $this->getPath() ), $newName );
+        $this->move( $destinationPath );
     }
 
     /**
@@ -585,35 +671,6 @@ class File {
     }
 
     /**
-     * copies the file
-     *
-     * @param string $destinationPath path to copy the file to
-     *
-     * @return void
-     */
-    public function copy( string $destinationPath ) {
-        copy( $this->getPath(), $destinationPath );
-    }
-
-    /**
-     * retrieves the file extension
-     *
-     * @return string
-     */
-    public function getExtension(): string {
-        return $this->extension ?? $this->getExtensionByMimeType();
-    }
-
-    /**
-     * sets the file extension
-     *
-     * @param string $extension
-     */
-    public function setExtension( string $extension ) {
-        $this->extension = $extension;
-    }
-
-    /**
      * tries to map the files mime type against a set of well-known mime types to find the extension
      *
      * @return string
@@ -648,6 +705,15 @@ class File {
     }
 
     /**
+     * retrieves the file name
+     *
+     * @return string
+     */
+    public function getName(): string {
+        return PathUtil::basename( $this->getPath() );
+    }
+
+    /**
      * reads a file
      *
      * @return string
@@ -655,7 +721,10 @@ class File {
      */
     public function read(): string {
         try {
-            return file_get_contents( $this->getPath() );
+            $content = file_get_contents( $this->getPath() );
+            $this->setIsVirtual( false );
+
+            return $content;
         }
         catch ( FoundationException $exception ) {
             throw new FileSystemException(
@@ -689,8 +758,18 @@ class File {
                 __LINE__
             );
         }
+
+        $this->setIsVirtual( false );
     }
 
+    /**
+     * appends content to a file
+     *
+     * @param string $content
+     *
+     * @return void
+     * @throws \Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException
+     */
     public function append( string $content ) {
         try {
             file_put_contents( $this->getPath(), $content, FILE_APPEND );
@@ -704,9 +783,23 @@ class File {
                 __LINE__
             );
         }
+
+        $this->setIsVirtual( false );
     }
 
+    /**
+     * deletes a file
+     *
+     * @return void
+     * @throws \Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException
+     */
     public function delete() {
+
+        // deleting virtual files makes no sense
+        if ( $this->isVirtual() ) {
+            return;
+        }
+
         try {
             unlink( $this->getPath() );
         }

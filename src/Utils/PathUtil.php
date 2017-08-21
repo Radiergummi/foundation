@@ -10,6 +10,7 @@ use const PATHINFO_DIRNAME;
 use const PATHINFO_EXTENSION;
 use function chmod;
 use function is_string;
+use function is_writable;
 use function pathinfo;
 use function str_replace;
 
@@ -147,7 +148,7 @@ class PathUtil {
 
         if ( ! is_dir( $directory ) ) {
             try {
-                mkdir( $directory, $mode,  true );
+                mkdir( $directory, $mode, true );
                 chmod( $directory, $mode );
             }
             catch ( FoundationException $exception ) {
@@ -169,6 +170,21 @@ class PathUtil {
         return preg_replace( $patterns, $replacements, $path );
     }
 
+    public static function iterate( string $path, bool $recursive = PathUtil::ITERATE_RECURSIVE ) {
+
+    }
+
+    /**
+     * checks if a path is writable
+     *
+     * @param string $path
+     *
+     * @return bool
+     */
+    public static function isWritable( string $path ) {
+        return is_writable( $path );
+    }
+
     /**
      * retrieves the directory name of a path
      *
@@ -182,9 +198,5 @@ class PathUtil {
         }
 
         return pathinfo( $path, PATHINFO_DIRNAME );
-    }
-
-    public static function iterate( string $path, bool $recursive = PathUtil::ITERATE_RECURSIVE ) {
-
     }
 }

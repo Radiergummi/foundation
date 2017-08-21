@@ -73,4 +73,9 @@ describe( 'PathUtil', function() {
 
         assert( PathUtil::extension( $path ) === $expectedValue );
     } );
+
+    it( 'should determine whether a path is writable', function() {
+        assert( PathUtil::isWritable( __DIR__ . '/../fixtures/cache' ) === true );
+        assert( PathUtil::isWritable( __DIR__ . '/foo/bar/baz' ) === false );
+    } );
 } );

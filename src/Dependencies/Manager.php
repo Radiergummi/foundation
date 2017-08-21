@@ -6,6 +6,7 @@ use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\TransferException;
 use Radiergummi\Foundation\Framework\Dependencies\Exception\DependencyDownloadException;
 use Radiergummi\Foundation\Framework\Exception\FoundationException;
+use Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException;
 use Radiergummi\Foundation\Framework\FileSystem\File;
 use Radiergummi\Foundation\Framework\Utils\PathUtil;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -86,6 +87,41 @@ class Manager {
     }
 
     /**
+     * retrieves the version of an available dependency
+     *
+     * @param \Radiergummi\Foundation\Framework\Dependencies\Dependency $dependency
+     *
+     * @return mixed|null
+     */
+    public function getVersion( Dependency $dependency ): string {
+        if ( $this->has( $dependency ) ) {
+            return $this->getIndex()->get( sprintf( '%s.version', $dependency->getName() ) );
+        }
+
+        return '0.0.0';
+    }
+
+    /**
+     * checks whether a dependency is already available
+     *
+     * @param \Radiergummi\Foundation\Framework\Dependencies\Dependency $dependency
+     *
+     * @return bool
+     */
+    public function has( Dependency $dependency ) {
+        return $this->getIndex()->has( $dependency->getName() );
+    }
+
+    /**
+     * retrieves the Manager Index
+     *
+     * @return \Radiergummi\Foundation\Framework\Dependencies\Index
+     */
+    public function getIndex(): Index {
+        return $this->index;
+    }
+
+    /**
      * updates a dependency by removing the old data and downloading the new
      *
      * @param \Radiergummi\Foundation\Framework\Dependencies\Dependency $dependency
@@ -103,15 +139,6 @@ class Manager {
         $oldFile->delete();
 
         $this->add( $dependency );
-    }
-
-    /**
-     * retrieves the Manager Index
-     *
-     * @return \Radiergummi\Foundation\Framework\Dependencies\Index
-     */
-    public function getIndex(): Index {
-        return $this->index;
     }
 
     /**
@@ -148,6 +175,7 @@ class Manager {
      * @return void
      * @throws \Radiergummi\Foundation\Framework\Dependencies\Exception\DependencyDownloadException
      * @throws \Radiergummi\Foundation\Framework\Exception\FoundationException
+     * @throws \Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException
      */
     protected function download( Dependency $dependency ) {
         $response          = null;
@@ -161,6 +189,10 @@ class Manager {
         $progressBar = null;
         $output      = $this->output;
         $remote      = $dependency->getRemote();
+
+        if ( ! PathUtil::isWritable( $this->getCachePath() ) ) {
+            throw new FileSystemException( 'cache directory is not writable: ' . $this->getCachePath() );
+        }
 
         try {
             // request the file, stream to the temporary path
@@ -215,7 +247,7 @@ class Manager {
 
         $fileType = finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $temporaryFilePath );
 
-        $dependencyFile->setMimeType( $fileType ?? $response->getHeader( 'Content-Type' )[0] );
+        $dependencyFile->setMimeType( $response->getHeader( 'Content-Type' )[0] ?? $fileType );
 
         try {
             PathUtil::create( PathUtil::join(
@@ -233,7 +265,7 @@ class Manager {
                 )
             ) );
 
-            $dependency->setLocal( $dependencyFile->getPath());
+            $dependency->setLocal( $dependencyFile->getPath() );
         }
 
         catch ( FoundationException $exception ) {
