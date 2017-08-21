@@ -193,7 +193,7 @@ class PathUtil {
      * @return string directory name
      */
     public static function directory( string $path ): string {
-        if ( $path{- 1} === DIRECTORY_SEPARATOR ) {
+        if ( substr( $path, - 1 ) === DIRECTORY_SEPARATOR ) {
             return pathinfo( $path, PATHINFO_BASENAME );
         }
 
