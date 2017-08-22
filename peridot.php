@@ -25,7 +25,7 @@ return function( EventEmitterInterface $emitter ) {
 
     $emitter->on( 'peridot.end', function() {
         if ( isset( $GLOBALS['__debug_called'] ) ) {
-            echo PHP_EOL . "Debugging method called on " . $GLOBALS['__debug_called'] . PHP_EOL;
+            echo PHP_EOL . "Debugging method called on " . $GLOBALS['__debug_called']  . " This will exit the build with code 2 to prevent leftover debugging code in production. Review the file and line and make sure there's no db() or dd() call before you commit the code again." . PHP_EOL;
             exit( 2 );
         }
     } );
