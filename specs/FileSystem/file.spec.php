@@ -3,10 +3,6 @@
 use Radiergummi\Foundation\Framework\FileSystem\File;
 
 describe( 'File', function() {
-    beforeEach( function() {
-
-    } );
-
     it( 'should instantiate', function() {
         $file = new File();
 

@@ -836,7 +836,7 @@ class File {
      * @return int
      */
     public function getSize(): int {
-        return $this->getMetadata()->getSize();
+        return $this->isVirtual() ? 0 : $this->getMetadata()->getSize();
     }
 
     /**
@@ -868,7 +868,7 @@ class File {
      * @return int
      */
     public function getTimestamp(): int {
-        return $this->getMetadata()->getMTime();
+        return $this->isVirtual() ? 0 : $this->getMetadata()->getMTime();
     }
 
     /**
@@ -878,7 +878,7 @@ class File {
      * @return int
      */
     public function getPerms(): int {
-        return $this->getPermissions();
+        return $this->isVirtual() ? 0 : $this->getPermissions();
     }
 
     /**
@@ -887,7 +887,7 @@ class File {
      * @return int
      */
     public function getPermissions(): int {
-        return $this->getMetadata()->getPerms();
+        return $this->isVirtual() ? 0 : $this->getMetadata()->getPerms();
     }
 
     /**
@@ -896,7 +896,7 @@ class File {
      * @return int
      */
     public function getGroup(): int {
-        return $this->getMetadata()->getGroup();
+        return $this->isVirtual() ? 0 : $this->getMetadata()->getGroup();
     }
 
     /**
@@ -904,8 +904,8 @@ class File {
      *
      * @return int
      */
-    public function getOwner() {
-        return $this->getMetadata()->getOwner();
+    public function getOwner(): int {
+        return $this->isVirtual() ? 0 : $this->getMetadata()->getOwner();
     }
 
     /**
@@ -914,7 +914,7 @@ class File {
      * @return bool
      */
     public function isWritable(): bool {
-        return $this->getMetadata()->isWritable();
+        return $this->isVirtual() ? false : $this->getMetadata()->isWritable();
     }
 
     /**
@@ -923,7 +923,7 @@ class File {
      * @return bool
      */
     public function isReadable(): bool {
-        return $this->getMetadata()->isReadable();
+        return $this->isVirtual() ? false : $this->getMetadata()->isReadable();
     }
 
     /**
@@ -932,6 +932,6 @@ class File {
      * @return bool
      */
     public function isExecutable(): bool {
-        return $this->getMetadata()->isExecutable();
+        return $this->isVirtual() ? false : $this->getMetadata()->isExecutable();
     }
 }
