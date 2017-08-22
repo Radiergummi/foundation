@@ -15,11 +15,11 @@
 function dd( ...$data ) {
 
     // retrieve the call origin
-    $backtrace = debug_backtrace()[1];
+    $backtrace = debug_backtrace();
     $origin    = sprintf(
         "\e[1;33mDEBUG @ %s:%s\e[0m \t",
-        $backtrace['file'],
-        $backtrace['line']
+        $backtrace[1]['file'] ?? $backtrace[0]['file'] ?? '{unknown}',
+        $backtrace[1]['line'] ?? $backtrace[0]['line'] ?? '{unknown}'
     );
 
     // if we're in a CI environment, this will be checked to fail the build manually with code 2
@@ -100,7 +100,7 @@ function dd( ...$data ) {
             echo sprintf(
                      "%s\e[36m(%s) %s\e[0m",
                      $origin,
-                     $type . ($length ? ', length ' . $length : ''),
+                     $type . ( $length ? ', length ' . $length : '' ),
                      (string) $data
                  ) . PHP_EOL;
 

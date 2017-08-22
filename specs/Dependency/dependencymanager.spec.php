@@ -6,12 +6,14 @@ use Radiergummi\Foundation\Framework\Dependencies\Manager as DependencyManager;
 use Radiergummi\Foundation\Framework\Exception\FoundationException;
 use Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException;
 
-describe( 'DependencyManager', function() {
+xdescribe( 'DependencyManager', function() {
+    /** @noinspection SpellCheckingInspection */
+    $this->testFileSource = 'http://ipv4.download.thinkbroadband.com/5MB.zip';
+    $this->storagePath    = __DIR__ . '/../fixtures/storage';
+    $this->cachePath      = __DIR__ . '/../fixtures/cache';
+
     beforeEach( function() {
-        /** @noinspection SpellCheckingInspection */
-        $this->testFileSource = 'http://ipv4.download.thinkbroadband.com/5MB.zip';
-        $this->storagePath    = __DIR__ . '/../fixtures/storage';
-        $this->cachePath      = __DIR__ . '/../fixtures/cache';
+        resetTemporaryDirectories( $this->storagePath, 'external' );
     } );
 
     it( 'should instantiate', function() {
@@ -38,8 +40,6 @@ describe( 'DependencyManager', function() {
 
         expect( $manager->has( $testDependency ) )
             ->to->be->true();
-
-        resetTemporaryDirectories( $this->storagePath, $testDependency->getType() );
     } );
 
     it( 'should throw on adding a dependency with a non existent remote', function() {
@@ -63,8 +63,6 @@ describe( 'DependencyManager', function() {
         expect( [ $manager, 'add' ] )
             ->with( $testDependency )
             ->to->throw( DependencyDownloadException::class );
-
-        resetTemporaryDirectories( $this->storagePath, $testDependency->getType() );
     } );
 
     it( 'should throw on non-writable directories', function() {
@@ -86,8 +84,6 @@ describe( 'DependencyManager', function() {
         expect( [ $manager, 'add' ] )
             ->with( $testDependency )
             ->to->throw( FileSystemException::class );
-
-        resetTemporaryDirectories( $this->storagePath, $testDependency->getType() );
     } );
 
     it( 'should update an existing dependency', function() {
@@ -115,8 +111,6 @@ describe( 'DependencyManager', function() {
 
         expect( $manager->getVersion( $newTestDependency ) )->to->equal( '2.0.0' );
         expect( $newTestDependency->getLocal() )->to->satisfy( 'is_file' );
-
-        resetTemporaryDirectories( $this->storagePath, $newTestDependency->getType() );
     } );
 
     it( 'should remove a dependency', function() {
@@ -139,8 +133,6 @@ describe( 'DependencyManager', function() {
 
         expect( $manager->has( $testDependency ) )
             ->to->be->false();
-
-        resetTemporaryDirectories( $this->storagePath, $testDependency->getType() );
     } );
 
     it( 'should throw on removing a non-installed dependency', function() {

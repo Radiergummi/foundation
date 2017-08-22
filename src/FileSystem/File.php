@@ -2,9 +2,11 @@
 
 namespace Radiergummi\Foundation\Framework\FileSystem;
 
+use DateTime;
 use Radiergummi\Foundation\Framework\Exception\FoundationException;
 use Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException;
 use Radiergummi\Foundation\Framework\Utils\PathUtil;
+use SplFileInfo;
 use const FILE_APPEND;
 use function file_get_contents;
 use function file_put_contents;
@@ -563,10 +565,42 @@ class File {
      *
      * @param string $destinationPath path to copy the file to
      *
-     * @return void
+     * @return \Radiergummi\Foundation\Framework\FileSystem\File copy of the original file
+     * @throws \Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException
      */
-    public function copy( string $destinationPath ) {
-        copy( $this->getPath(), $destinationPath );
+    public function copy( string $destinationPath ): File {
+        try {
+            copy( $this->getPath(), $destinationPath );
+        }
+        catch ( FoundationException $exception ) {
+            throw new FileSystemException(
+                'Could not copy file ' . $this->getPath(),
+                1,
+                $exception,
+                __FILE__,
+                __LINE__
+            );
+        }
+
+        return new File( $destinationPath );
+    }
+
+    /**
+     * retrieves the file path
+     *
+     * @return string file path
+     */
+    public function getPath(): string {
+        return $this->path;
+    }
+
+    /**
+     * sets the file path
+     *
+     * @param string $path path to set
+     */
+    public function setPath( string $path ) {
+        $this->path = PathUtil::normalize( $path );
     }
 
     /**
@@ -650,24 +684,6 @@ class File {
         }
 
         $this->setPath( $destinationPath );
-    }
-
-    /**
-     * retrieves the file path
-     *
-     * @return string file path
-     */
-    public function getPath(): string {
-        return $this->path;
-    }
-
-    /**
-     * sets the file path
-     *
-     * @param string $path path to set
-     */
-    public function setPath( string $path ) {
-        $this->path = PathUtil::normalize( $path );
     }
 
     /**
@@ -812,5 +828,110 @@ class File {
                 __LINE__
             );
         }
+    }
+
+    /**
+     * retrieves the file size
+     *
+     * @return int
+     */
+    public function getSize(): int {
+        return $this->getMetadata()->getSize();
+    }
+
+    /**
+     * retrieves meta data for a file
+     *
+     * @return \SplFileInfo
+     */
+    public function getMetadata(): SplFileInfo {
+        return new SplFileInfo( $this->path );
+    }
+
+    /**
+     * retrieves the last modification date and time. use getTimestamp() to get the unix timestamp.
+     *
+     * @see \Radiergummi\Foundation\Framework\FileSystem\File::getTimestamp()
+     * @return \DateTime
+     */
+    public function getTime(): DateTime {
+        $modificationDateTime = new DateTime();
+        $modificationDateTime->setTimestamp( $this->getTimestamp() );
+
+        return $modificationDateTime;
+    }
+
+    /**
+     * retrieves the last modification timestamp. use getTime() to get a DateTime object.
+     *
+     * @see \Radiergummi\Foundation\Framework\FileSystem\File::getTime()
+     * @return int
+     */
+    public function getTimestamp(): int {
+        return $this->getMetadata()->getMTime();
+    }
+
+    /**
+     * alias to getPermissions
+     *
+     * @see \Radiergummi\Foundation\Framework\FileSystem\File::getPermissions()
+     * @return int
+     */
+    public function getPerms(): int {
+        return $this->getPermissions();
+    }
+
+    /**
+     * retrieves the file permissions
+     *
+     * @return int
+     */
+    public function getPermissions(): int {
+        return $this->getMetadata()->getPerms();
+    }
+
+    /**
+     * retrieves the owning group ID
+     *
+     * @return int
+     */
+    public function getGroup(): int {
+        return $this->getMetadata()->getGroup();
+    }
+
+    /**
+     * retrieves the owners user ID
+     *
+     * @return int
+     */
+    public function getOwner() {
+        return $this->getMetadata()->getOwner();
+    }
+
+    /**
+     * checks whether the file is writable
+     *
+     * @return bool
+     */
+    public function isWritable(): bool {
+        return $this->getMetadata()->isWritable();
+    }
+
+    /**
+     * checks whether the file is readable
+     *
+     * @return bool
+     */
+    public function isReadable(): bool {
+        return $this->getMetadata()->isReadable();
+    }
+
+    /**
+     * checks whether the file is executable
+     *
+     * @return bool
+     */
+    public function isExecutable(): bool {
+        return $this->getMetadata()->isExecutable();
     }
 }

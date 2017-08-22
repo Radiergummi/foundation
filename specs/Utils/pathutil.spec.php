@@ -56,9 +56,93 @@ describe( 'PathUtil', function() {
     } );
 
     it( 'should determine whether a path is writable', function() {
-        expect(PathUtil::isWritable( __DIR__ . '/../fixtures/cache' ) )
+        expect( PathUtil::isWritable( __DIR__ . '/../fixtures/cache' ) )
             ->to->be->true();
-        expect(PathUtil::isWritable( __DIR__ . '/foo/bar/baz' ) )
+        expect( PathUtil::isWritable( __DIR__ . '/foo/bar/baz' ) )
             ->to->be->false();
+    } );
+
+    it( 'should parse a UNIX path', function() {
+        $parsed = PathUtil::parse( '/foo/bar/baz/quz.txt' );
+
+        expect( $parsed )
+            ->to->contain->keys( [
+                                     'root',
+                                     'directory',
+                                     'basename',
+                                     'extension',
+                                     'name'
+                                 ] );
+        expect( $parsed )
+            ->to->contain->property( 'root', '/' );
+
+        expect( $parsed )
+            ->to->contain->property( 'directory', '/foo/bar/baz' );
+
+        expect( $parsed )
+            ->to->contain->property( 'basename', 'quz.txt' );
+
+        expect( $parsed )
+            ->to->contain->property( 'extension', 'txt' );
+
+        expect( $parsed )
+            ->to->contain->property( 'name', 'quz.txt' );
+    } );
+
+    it( 'should parse a Windows path', function() {
+        $parsed = PathUtil::parse( 'C:\\foo\\bar\\baz\\quz.txt' );
+
+        expect( $parsed )
+            ->to->contain->property( 'root', 'C:\\' );
+
+        expect( $parsed )
+            ->to->contain->property( 'directory', 'C:\\foo\\bar\\baz' );
+
+        expect( $parsed )
+            ->to->contain->property( 'basename', 'quz.txt' );
+
+        expect( $parsed )
+            ->to->contain->property( 'extension', 'txt' );
+
+        expect( $parsed )
+            ->to->contain->property( 'name', 'quz.txt' );
+    } );
+
+    it( 'should parse a UNC path', function() {
+        $parsed = PathUtil::parse( '\\\\foo\\bar\\baz\\quz.txt' );
+
+        expect( $parsed )
+            ->to->contain->property( 'root', '\\\\foo\\bar\\' );
+
+        expect( $parsed )
+            ->to->contain->property( 'directory', '\\\\foo\\bar\\baz' );
+
+        expect( $parsed )
+            ->to->contain->property( 'basename', 'quz.txt' );
+
+        expect( $parsed )
+            ->to->contain->property( 'extension', 'txt' );
+
+        expect( $parsed )
+            ->to->contain->property( 'name', 'quz.txt' );
+    } );
+
+    it( 'should parse a path with multiple dots', function() {
+        $parsed = PathUtil::parse( '/foo/bar/baz/../quz.min.txt' );
+
+        expect( $parsed )
+            ->to->contain->property( 'root', '/' );
+
+        expect( $parsed )
+            ->to->contain->property( 'directory', '/foo/bar/baz/..' );
+
+        expect( $parsed )
+            ->to->contain->property( 'basename', 'quz.min.txt' );
+
+        expect( $parsed )
+            ->to->contain->property( 'extension', 'txt' );
+
+        expect( $parsed )
+            ->to->contain->property( 'name', 'quz.min.txt' );
     } );
 } );

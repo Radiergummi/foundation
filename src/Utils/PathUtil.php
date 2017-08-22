@@ -12,11 +12,14 @@ use const PATHINFO_BASENAME;
 use const PATHINFO_DIRNAME;
 use const PATHINFO_EXTENSION;
 use function chmod;
+use function explode;
 use function is_readable;
 use function is_string;
 use function is_writable;
 use function pathinfo;
 use function str_replace;
+use function strlen;
+use function substr;
 
 /**
  * PathUtil class
@@ -286,5 +289,219 @@ class PathUtil {
         }
 
         return pathinfo( $path, PATHINFO_DIRNAME );
+    }
+
+    public static function parse( string $path ) {
+        $parsed = [
+            'root'      => '',
+            'directory' => '',
+            'basename'  => '',
+            'extension' => '',
+            'name'      => ''
+        ];
+
+        $pathLength = strlen( $path );
+
+        if ( $pathLength === 0 ) {
+            return $parsed;
+        }
+
+        $rootEnd = 0;
+        $code    = ord( substr( $path, 0, 1 ) );
+
+        if ( $pathLength > 1 ) {
+            if ( $code === 47 || $code === 92 ) {
+
+                // Possible UNC root
+                $code    = ord( substr( $path, 1, 1 ) );
+                $rootEnd = 1;
+
+                if ( $code === 47 || $code === 92 ) {
+
+                    // Matched double path separator at beginning
+                    $j    = 2;
+                    $last = $j;
+
+                    // Match 1 or more non-path separators
+                    for ( ; $j < $pathLength; $j ++ ) {
+                        $code = ord( substr( $path, $j, 1 ) );
+
+                        if ( $code === 47 || $code === 92 ) {
+                            break;
+                        }
+                    }
+
+                    if ( $j < $pathLength && $j !== $last ) {
+
+                        // Matched!
+                        $last = $j;
+
+                        // Match 1 or more path separators
+                        for ( ; $j < $pathLength; $j ++ ) {
+                            $code = ord( substr( $path, $j, 1 ) );
+
+                            if ( $code !== 47 && $code !== 92 ) {
+                                break;
+                            }
+                        }
+
+                        if ( $j < $pathLength && $j !== $last ) {
+
+                            // Matched!
+                            $last = $j;
+
+                            // Match 1 or more non-path separators
+                            for ( ; $j < $pathLength; $j ++ ) {
+                                $code = ord( substr( $path, $j, 1 ) );
+
+                                if ( $code === 47 || $code === 92 ) {
+                                    break;
+                                }
+                            }
+
+                            if ( $j === $pathLength ) {
+
+                                // We matched a UNC root only
+                                $rootEnd = $j;
+                            } else if ( $j !== $last ) {
+
+                                // We matched a UNC root with leftovers
+                                $rootEnd = $j + 1;
+                            }
+                        }
+                    }
+                }
+            } else if (
+                ( $code >= 65/*A*/ && $code <= 90/*Z*/ ) ||
+                ( $code >= 97/*a*/ && $code <= 122/*z*/ )
+            ) {
+                // Possible device root
+                $code = ord( substr( $path, 1, 1 ) );
+
+                if ( $code === 58/*:*/ ) {
+                    $rootEnd = 2;
+
+                    if ( $pathLength > 2 ) {
+                        $code = ord( substr( $path, 2, 1 ) );
+                        if ( $code === 47/*/*/ || $code === 92/*\*/ ) {
+                            if ( $pathLength === 3 ) {
+
+
+                                // `path` contains just a drive root, exit early to avoid
+                                // unnecessary work
+                                $parsed['root'] = $parsed['directory'] = $path;
+
+                                return $parsed;
+                            }
+
+                            $rootEnd = 3;
+                        }
+                    } else {
+
+                        // `path` contains just a drive root, exit early to avoid
+                        // unnecessary work
+                        $parsed['root'] = $parsed['directory'] = $path;
+
+                        return $parsed;
+                    }
+                }
+            }
+        } else if ( $code === 47 || $code === 92 ) {
+
+            // `path` contains just a path separator, exit early to avoid
+            // unnecessary work
+            $parsed['root'] = $parsed['directory'] = $path;
+
+            return $parsed;
+        }
+
+        if ( $rootEnd > 0 ) {
+            $parsed['root'] = substr( $path, 0, $rootEnd );
+        }
+
+        $startDot     = - 1;
+        $startPart    = $rootEnd;
+        $end          = - 1;
+        $matchedSlash = true;
+        $i            = strlen( $path ) - 1;
+
+        // Track the state of characters (if any) we see before our first dot and
+        // after any path separator we find
+        $preDotState = 0;
+
+        // Get non-dir info
+        for ( ; $i >= $rootEnd; -- $i ) {
+            $code = ord( substr( $path, $i, 1 ) );
+
+            if ( $code === 47 || $code === 92 ) {
+
+                // If we reached a path separator that was not part of a set of path
+                // separators at the end of the string, stop now
+                if ( ! $matchedSlash ) {
+                    $startPart = $i + 1;
+
+                    break;
+                }
+
+                continue;
+            }
+
+            if ( $end === - 1 ) {
+
+                // We saw the first non-path separator, mark this as the end of our
+                // extension
+                $matchedSlash = false;
+                $end          = $i + 1;
+            }
+
+            if ( $code === 46/*.*/ ) {
+
+                // If this is our first dot, mark it as the start of our extension
+                if ( $startDot === - 1 ) {
+                    $startDot = $i;
+                } else if ( $preDotState !== 1 ) {
+                    $preDotState = 1;
+                }
+            } else if ( $startDot !== - 1 ) {
+
+                // We saw a non-dot and non-path separator before our dot, so we should
+                // have a good chance at having a non-empty extension
+                $preDotState = - 1;
+            }
+        }
+
+        if (
+            $startDot === - 1 ||
+            $end === - 1 ||
+
+            // We saw a non-dot character immediately before the dot
+            $preDotState === 0 ||
+
+            // The (right-most) trimmed path component is exactly '..'
+            (
+                $preDotState === 1 &&
+                $startDot === $end - 1 &&
+                $startDot === $startPart + 1
+            )
+        ) {
+            if ( $end !== - 1 ) {
+                $parsed['basename'] = $parsed['name'] = substr( $path, $startPart, $end );
+            }
+        } else {
+            $parsed['name']      = substr( $path, $startPart, $startDot );
+            $parsed['basename']  = substr( $path, $startPart, $end );
+            $parsed['extension'] = substr( $path, $startDot + 1, $end );
+        }
+
+        // If the directory is the root, use the entire root as the `dir` including
+        // the trailing slash if any (`C:\abc` -> `C:\`). Otherwise, strip out the
+        // trailing slash (`C:\abc\def` -> `C:\abc`).
+        if ( $startPart > 0 && $startPart !== $rootEnd ) {
+            $parsed['directory'] = substr( $path, 0, $startPart - 1 );
+        } else {
+            $parsed['directory'] = $parsed['root'];
+        }
+
+        return $parsed;
     }
 }
