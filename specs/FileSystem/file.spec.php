@@ -19,7 +19,5 @@ describe( 'File', function() {
 
         expect( $file->getPath() )
             ->to->equal( '/bar/baz.test' );
-
-        db( ( new File( __DIR__ . '/file.spec.php' ) )->getTime() );
     } );
 } );
