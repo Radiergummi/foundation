@@ -23,8 +23,8 @@ return function( EventEmitterInterface $emitter ) {
                     ->setDefault( 'specs' );
     } );
 
-    $emitter->on( 'peridot.end', function( Environment $environment ) {
-        if ( $GLOBALS['__debug_called'] ) {
+    $emitter->on( 'peridot.end', function() {
+        if ( isset( $GLOBALS['__debug_called'] ) ) {
             exit( 2 );
         }
     } );
@@ -32,6 +32,7 @@ return function( EventEmitterInterface $emitter ) {
     /**
      * include the autoloader
      */
+    /** @noinspection PhpIncludeInspection */
     include realpath( dirname( __FILE__ ) . '/vendor/autoload.php' );
 
     // $coverage = new CodeCoverageReporters( $emitter );

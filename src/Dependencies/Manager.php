@@ -201,6 +201,8 @@ class Manager {
             );
         }
 
+        dd($this);
+
         // round download size to KB
         $progressBar = new ProgressBar( $output, ceil( $downloadLength / 1000 ) );
         $progressBar->setEmptyBarCharacter( ' ' );
