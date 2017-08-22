@@ -9,15 +9,15 @@
  */
 function dd( ...$data ) {
 
-    // if we're in a CI environment, this will be checked to fail the build manually
-    $GLOBALS['__debug_called'] = true;
-
     $backtrace = debug_backtrace()[1];
     $origin    = sprintf(
         "\e[1;33mDEBUG @ %s:%s\e[0m \t",
         $backtrace['file'],
         $backtrace['line']
     );
+
+    // if we're in a CI environment, this will be checked to fail the build manually
+    $GLOBALS['__debug_called'] = $origin;
 
     foreach ( $data as $key => $item ) {
         if ( is_object( $item ) ) {

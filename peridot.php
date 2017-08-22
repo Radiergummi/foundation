@@ -25,6 +25,7 @@ return function( EventEmitterInterface $emitter ) {
 
     $emitter->on( 'peridot.end', function() {
         if ( isset( $GLOBALS['__debug_called'] ) ) {
+            echo "Debugging method called on " . $GLOBALS['__debug_called'];
             exit( 2 );
         }
     } );
