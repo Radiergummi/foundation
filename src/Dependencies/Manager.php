@@ -2,6 +2,7 @@
 
 namespace Radiergummi\Foundation\Framework\Dependencies;
 
+use function db;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\TransferException;
 use Radiergummi\Foundation\Framework\Dependencies\Exception\DependencyDownloadException;
@@ -182,45 +183,48 @@ class Manager {
         $response          = null;
         $temporaryFileName = $dependency->getName() . time();
         $temporaryFilePath = PathUtil::join( $this->getCachePath(), $temporaryFileName );
-
-        // create a reference for the progress bar - we can't instantiate it outside of the
-        // progress callback, because the Symfony ProgressBar does not allow for changing the
-        // maximum later on.
-        /** @var \Symfony\Component\Console\Helper\ProgressBar $progressBar */
-        $progressBar = null;
-        $output      = $this->output;
-        $remote      = $dependency->getRemote();
+        $output            = $this->output;
+        $remote            = $dependency->getRemote();
 
         if ( ! PathUtil::isWritable( $this->getCachePath() ) ) {
             throw new FileSystemException( 'cache directory is not writable: ' . $this->getCachePath() );
         }
 
+        // fetch the download HTTP headers
+        try {
+            $response       = $this->httpClient->head( $remote );
+            $downloadLength = $response->getHeader( 'Content-Length' )[0];
+        }
+        catch ( TransferException $transferException ) {
+            throw new DependencyDownloadException(
+                'Could not download dependency: ' . $transferException->getMessage()
+            );
+        }
+
+        // round download size to KB
+        $progressBar = new ProgressBar( $output, ceil( $downloadLength / 1000 ) );
+        $progressBar->setEmptyBarCharacter( ' ' );
+        $progressBar->setMessage( "<info>Downloading $remote</info>" );
+        $progressBar->setFormat( "%current%/%max%kb [%bar%] %percent:3s%% %remaining:6s%\t%message%" );
+        $progressBar->start();
+
         try {
             // request the file, stream to the temporary path
             $response = $this->httpClient->request(
                 'GET',
-                $dependency->getRemote(),
+                $remote,
                 [
                     'sink'     => $temporaryFilePath,
                     'progress' => function( int $total, int $progress ) use ( &$progressBar, $output, $remote ) {
-                        #if ( ! $output ) {
-                        #    return;
-                        #}
 
-                        if ( ! $progressBar ) {
-
-                            // the progress callback gets called before the actual download starts
-                            // resulting in total being 0 so we need to check for that
-                            if ( $total === 0 ) {
-                                return;
-                            }
-
-                            $progressBar = new ProgressBar( $output, $total );
-                            $progressBar->setEmptyBarCharacter( ' ' );
-                            $progressBar->setMessage( 'Downloading ' . $remote );
-                            $progressBar->setFormat( "%current%/%max% [%bar%] %percent:3s%% %remaining:6s%\t%message%" );
-                            $progressBar->start();
+                        // the progress callback gets called before the actual download starts
+                        // resulting in total being 0 so we need to check for that
+                        if ( $total === 0 ) {
+                            return;
                         }
+
+                        $total    = $total / 1000;
+                        $progress = $progress / 1000;
 
                         $progressBar->setProgress( $progress );
 
@@ -237,6 +241,8 @@ class Manager {
             );
         }
 
+        $output->write( PHP_EOL );
+
         $dependencyFile = new File( $temporaryFilePath );
 
         // guessing the file extension
@@ -251,9 +257,12 @@ class Manager {
         $mimeExtension      = substr( strrchr( $fileType, '/' ), 1 );
         $remoteFilename     = PathUtil::basename( $remote );
         $remoteExtension    = PathUtil::extension( $remoteFilename );
-        $contentDisposition = PathUtil::extension( substr( strrchr(
-                                                               $response->getHeader( 'Content-Disposition' )[0] ?? 'filename=' . $remoteFilename,
-                                                               '=' ), 1 ) );
+        $contentDisposition = PathUtil::extension(
+            substr( strrchr(
+                        $response->getHeader( 'Content-Disposition' )[0] ?? 'filename=' . $remoteFilename,
+                        '='
+                    ), 1 )
+        );
 
         // try to validate any findings
         if ( $remoteExtension === $contentDisposition ) {

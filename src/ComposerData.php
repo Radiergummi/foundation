@@ -3,9 +3,9 @@
 namespace Radiergummi\Foundation\Framework;
 
 use InvalidArgumentException;
-use function is_file;
+use Radiergummi\Foundation\Framework\FileSystem\File;
 use Radiergummi\Foundation\Framework\Utils\ArrayUtil;
-use function file_get_contents;
+use function is_file;
 use function json_decode;
 
 /**
@@ -26,27 +26,40 @@ class ComposerData {
      * ComposerData constructor
      *
      * @param string $composerJsonPath
+     *
      * @throws \InvalidArgumentException
+     * @throws \Radiergummi\Foundation\Framework\Exception\FoundationException
      */
     public function __construct( string $composerJsonPath ) {
-        if (!is_file( $composerJsonPath)) {
-        throw new InvalidArgumentException('Error: ' . $composerJsonPath . ': no such file or directory');
+        if ( ! is_file( $composerJsonPath ) ) {
+            throw new InvalidArgumentException( 'Error: ' . $composerJsonPath . ': no such file or directory' );
         }
 
-        $this->config = $this->load( $composerJsonPath );
+        $composerFile = new File( $composerJsonPath );
+
+        $this->config = $this->load( $composerFile );
     }
 
     /**
      * loads a composer.json file
      *
-     * @param string $path path to composer.json
+     * @param File $file file holding the composer.json
      *
      * @return array
+     * @throws \Radiergummi\Foundation\Framework\Exception\FoundationException
      */
-    public function load( string $path ): array {
-        return json_decode( file_get_contents( $path ), true );
+    public function load( File $file ): array {
+        return json_decode( $file->read(), true );
     }
 
+    /**
+     * retrieves a value from the composer.json file
+     *
+     * @param string $key
+     * @param null   $fallback
+     *
+     * @return mixed|null
+     */
     public function get( string $key, $fallback = null ) {
         return ArrayUtil::get( $this->config, $key, $fallback );
     }

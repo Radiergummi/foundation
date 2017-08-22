@@ -14,7 +14,10 @@
     "psr-4": {
       "App\\":                                "app/",
       "Radiergummi\\Foundation\\Framework\\": "src/"
-    }
+    },
+    "files": [
+      "src/functions.php"
+    ]
   },
   "require":           {
     "cilex/cilex":                                 "^2.0",

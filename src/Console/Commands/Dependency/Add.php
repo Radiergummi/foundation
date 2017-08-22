@@ -6,11 +6,17 @@ use Cilex\Provider\Console\Command;
 use Composer\Semver\Comparator as VersionComparator;
 use Radiergummi\Foundation\Framework\Dependencies\Dependency;
 use Radiergummi\Foundation\Framework\Dependencies\Manager as DependencyManager;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
+use Symfony\Component\Console\Question\Question;
+use const FILTER_VALIDATE_URL;
+use function array_shift;
+use function filter_var;
+use function preg_match;
 use function sprintf;
 
 /**
@@ -19,12 +25,15 @@ use function sprintf;
  * @package Radiergummi\Foundation\Framework\Console\Commands\Dependency
  */
 class Add extends Command {
+
+    /**
+     * @inheritdoc
+     */
     protected function configure() {
         $this
             ->setName( 'dependency:add' )
             ->setDescription( 'Adds a dependency' )
             ->addArgument( 'name', InputArgument::REQUIRED, 'dependency name' )
-            ->addOption( 'release', null, InputOption::VALUE_OPTIONAL, 'dependency release version' )
             ->addOption( 'remote', 'r', InputOption::VALUE_OPTIONAL, 'dependency remote URL' );
     }
 
@@ -42,6 +51,7 @@ class Add extends Command {
      * @throws \Symfony\Component\Console\Exception\RuntimeException
      */
     protected function execute( InputInterface $input, OutputInterface $output ) {
+        $dependencyRemote = $input->getOption( 'remote' );
 
         $dependencyManager = new DependencyManager();
         $dependencyManager->setOutputStream( $output );
@@ -49,10 +59,36 @@ class Add extends Command {
         /** @var \Symfony\Component\Console\Helper\QuestionHelper $helper */
         $helper = $this->getHelper( 'question' );
 
+        $matches = [];
+
+        // check if the name has been entered as <name>@<version>
+        if ( preg_match( '/(.+)@([0-9\.-_]+)/', $input->getArgument( 'name' ), $matches ) ) {
+
+            // remove the full match
+            array_shift( $matches );
+
+            list( $dependencyName, $dependencyVersion ) = $matches;
+        } else {
+            throw new InvalidArgumentException( 'Dependencies must be specified as "{name}@{version}"' );
+        }
+
+        if ( ! $dependencyRemote ) {
+            $remoteQuestion = new Question( 'Please enter the remote URL for the dependency: ' );
+            $remoteQuestion->setValidator( function( $remote ) {
+                if ( ! filter_var( $remote, FILTER_VALIDATE_URL ) ) {
+                    throw new InvalidArgumentException( 'The remote URL must be valid' );
+                }
+
+                return $remote;
+            } );
+
+            $dependencyRemote = $helper->ask( $input, $output, $remoteQuestion );
+        }
+
         $dependency = new Dependency(
-            $input->getArgument( 'name' ),
-            $input->getOption( 'release' ) ?? '',
-            $input->getOption( 'remote' ) ?? ''
+            $dependencyName,
+            $dependencyVersion,
+            $dependencyRemote
         );
 
         // check if we have that dependency already

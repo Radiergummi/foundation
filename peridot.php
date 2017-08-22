@@ -2,7 +2,6 @@
 
 use Evenement\EventEmitterInterface;
 use Peridot\Console\Environment;
-use Peridot\Reporter\CodeCoverageReporters;
 
 error_reporting( - 1 );
 
@@ -22,6 +21,12 @@ return function( EventEmitterInterface $emitter ) {
         $environment->getDefinition()
                     ->getArgument( 'path' )
                     ->setDefault( 'specs' );
+    } );
+
+    $emitter->on( 'peridot.end', function( Environment $environment ) {
+        if ( $GLOBALS['__debug_called'] ) {
+            exit( 2 );
+        }
     } );
 
     /**
