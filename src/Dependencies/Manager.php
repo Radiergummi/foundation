@@ -2,7 +2,6 @@
 
 namespace Radiergummi\Foundation\Framework\Dependencies;
 
-use function db;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\TransferException;
 use Radiergummi\Foundation\Framework\Dependencies\Exception\DependencyDownloadException;
@@ -200,8 +199,6 @@ class Manager {
                 'Could not download dependency: ' . $transferException->getMessage()
             );
         }
-
-        dd($this);
 
         // round download size to KB
         $progressBar = new ProgressBar( $output, ceil( $downloadLength / 1000 ) );
