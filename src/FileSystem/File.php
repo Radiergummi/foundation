@@ -3,14 +3,19 @@
 namespace Radiergummi\Foundation\Framework\FileSystem;
 
 use DateTime;
+use finfo as FileInfo;
 use Radiergummi\Foundation\Framework\Exception\FoundationException;
 use Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException;
 use Radiergummi\Foundation\Framework\Utils\PathUtil;
 use SplFileInfo;
 use const FILE_APPEND;
+use const FILEINFO_MIME_TYPE;
+use function file_exists;
 use function file_get_contents;
 use function file_put_contents;
 use function is_file;
+use function strtolower;
+use function substr;
 use function unlink;
 
 /**
@@ -26,6 +31,51 @@ use function unlink;
  * @package Radiergummi\Foundation\Framework\FileSystem
  */
 class File {
+
+    /**
+     * holds common magic numbers to determine file type with
+     */
+    const MAGIC_NUMBERS = [
+        '377abcaf271c'                                  => '7z',
+        '7f454c46'                                      => 'bin',
+        '424d'                                          => 'bmp',
+        '7801730d626260'                                => 'dmg',
+        '582d'                                          => 'eml',
+        '52657475726E2D506174683A20'                    => 'eml',
+        '252150532d41646f62652d332e020455053462d332030' => 'eps',
+        '4d5a'                                          => 'exe',
+        '47494638'                                      => 'gif',
+        '99'                                            => 'gpg',
+        '1f8b'                                          => 'gz',
+        '0606edf5d81d46e5bd31efe7fe74b71d'              => 'indd',
+        '5f27a889'                                      => 'jar',
+        '7b0a'                                          => 'json',
+        'ffd8'                                          => 'jpeg',
+        '45786966'                                      => 'jpeg',
+        '4c5a4950'                                      => 'lzip',
+        '1a45dfa3'                                      => 'mkv',
+        'e4525c7b8cd8a74daeb15378d02996d3'              => 'one',
+        '25504446'                                      => 'pdf',
+        '3c3f'                                          => 'php',
+        '9901'                                          => 'pkr',
+        '89504e470d0a1a0a'                              => 'png',
+        '38425053'                                      => 'psd',
+        '526172211A0700'                                => 'rar',
+        '526172211A070100'                              => 'rar',
+        '7b5c72746631'                                  => 'rtf',
+        '2321'                                          => 'sh',
+        '7573746172003030'                              => 'tar',
+        '0001000000'                                    => 'ttf',
+        '6d736100'                                      => 'wasm',
+        '52494646'                                      => 'webp',
+        'd7cdc69a'                                      => 'wmf',
+        '774f4646'                                      => 'woff',
+        '774f4632'                                      => 'woff2',
+        '3c3f786d6c20'                                  => 'xml',
+        'fd377a585a00'                                  => 'xz',
+        '504b'                                          => 'zip',
+        '504B030414000600'                              => 'zip',
+    ];
 
     /**
      * holds common file extensions and their mime types
@@ -517,7 +567,57 @@ class File {
                 'application/json',
                 'text/json',
             ],
+        'webp'  => [
+            'image/webp'
+        ]
     ];
+
+    /**
+     * file size in byte (B)
+     *
+     * @var int
+     */
+    const SIZE_BYTE = 0;
+
+    /**
+     * file size in exbibyte (EB)
+     */
+    const SIZE_EXBIBYTE = 6;
+
+    /**
+     * file size in gibibyte (GB)
+     *
+     * @var int
+     */
+    const SIZE_GIBIBYTE = 3;
+
+    /**
+     * file size in kibibyte (KB)
+     *
+     * @var int
+     */
+    const SIZE_KIBIBYTE = 1;
+
+    /**
+     * file size in mebibyte (MB)
+     *
+     * @var int
+     */
+    const SIZE_MEBIBYTE = 2;
+
+    /**
+     * file size in pebibyte (PB)
+     *
+     * @var int
+     */
+    const SIZE_PEBIBYTE = 5;
+
+    /**
+     * file size in tebibyte (TB)
+     *
+     * @var int
+     */
+    const SIZE_TEBIBYTE = 4;
 
     /**
      * holds the file path
@@ -604,12 +704,82 @@ class File {
     }
 
     /**
+     * tries to map the files mime type against a set of well-known mime types to find the extension
+     *
+     * @return string
+     */
+    public function getExtensionByMimeType(): string {
+        foreach ( File::MIME_TYPES as $extension => $mimeTypes ) {
+            if ( array_search( $this->getMimeType(), $mimeTypes ) !== false ) {
+                return $extension;
+            }
+        }
+
+        // fall back to the file extension from path
+        return PathUtil::extension( $this->getPath() ) ?? 'dat';
+    }
+
+    /**
+     * retrieves the files mime type
+     *
+     * @return string
+     */
+    public function getMimeType(): string {
+        if ( $this->mimeType ) {
+            return $this->mimeType;
+        }
+
+        // "FileInfo" is the native finfo class, I just can't stand lower case class names
+        $fileInfo         = new FileInfo( FILEINFO_MIME_TYPE );
+        $fileInfoMimeType = $fileInfo->file( $this->getPath() );
+
+        if ( strlen( $fileInfoMimeType ) > 0 ) {
+            return $fileInfoMimeType;
+        }
+
+        return $this->getMimeTypeByExtension();
+    }
+
+    /**
+     * sets the files mime type
+     *
+     * @param string $mimeType
+     */
+    public function setMimeType( string $mimeType ) {
+        $this->mimeType = $mimeType;
+    }
+
+    /**
+     * retrieves the mime type by file extension. this is obviously just an educated guess, since
+     * there may be more mime types for an extension. therefore, the MIME_TYPES constant has all
+     * mime types ordered by most probable match.
+     *
+     * @return string
+     */
+    public function getMimeTypeByExtension(): string {
+        $fileExtension = $this->getExtension();
+
+        foreach ( File::MIME_TYPES as $extension => $mimeTypes ) {
+            if ( $extension === $fileExtension ) {
+                return $mimeTypes[0];
+            }
+        }
+
+        /**
+         * fall back to octet-stream for unknown file types as specified in RFC2046 section 4.5.1
+         *
+         * @see http://www.rfc-editor.org/rfc/rfc2046.txt
+         */
+        return 'application/octet-stream';
+    }
+
+    /**
      * retrieves the file extension
      *
      * @return string
      */
     public function getExtension(): string {
-        return $this->extension ?? $this->getExtensionByMimeType();
+        return $this->extension ?? $this->determineType();
     }
 
     /**
@@ -626,6 +796,26 @@ class File {
         if ( ! $this->isVirtual() ) {
             $this->rename( PathUtil::basename( $this->getPath(), $this->getExtension() ) . '.' . $extension );
         }
+    }
+
+    /**
+     * determines file type by evaluating magic numbers aka the first few bytes of a file
+     *
+     * @return string
+     */
+    public function determineType(): string {
+        $handle = fopen( $this->path, 'r' );
+
+        // get files magic number
+        $fileHeader = bin2hex( fread( $handle, 16 ) );
+
+        foreach ( File::MAGIC_NUMBERS as $magicNumber => $type ) {
+            if ( strtolower( substr( $fileHeader, 0, strlen( $magicNumber ) ) ) === strtolower( $magicNumber ) ) {
+                return $type;
+            }
+        }
+
+        return 'bin';
     }
 
     /**
@@ -684,49 +874,6 @@ class File {
         }
 
         $this->setPath( $destinationPath );
-    }
-
-    /**
-     * tries to map the files mime type against a set of well-known mime types to find the extension
-     *
-     * @return string
-     */
-    public function getExtensionByMimeType(): string {
-        foreach ( File::MIME_TYPES as $extension => $mimeTypes ) {
-            if ( array_search( $this->getMimeType(), $mimeTypes ) !== false ) {
-                return $extension;
-            }
-        }
-
-        // fall back to the file extension from path
-        return PathUtil::extension( $this->getPath() ) ?? 'dat';
-    }
-
-    /**
-     * retrieves the files mime type
-     *
-     * @return string
-     */
-    public function getMimeType(): string {
-        return $this->mimeType ?? finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $this->getPath() );
-    }
-
-    /**
-     * sets the files mime type
-     *
-     * @param string $mimeType
-     */
-    public function setMimeType( string $mimeType ) {
-        $this->mimeType = $mimeType;
-    }
-
-    /**
-     * retrieves the file name
-     *
-     * @return string
-     */
-    public function getName(): string {
-        return PathUtil::basename( $this->getPath() );
     }
 
     /**
@@ -828,19 +975,41 @@ class File {
                 __LINE__
             );
         }
+
+        // make files not existing anymore virtual
+        $this->setIsVirtual( true );
     }
 
     /**
-     * retrieves the file size
+     * retrieves the file size. The size is returned as a float exclusively - I played with converting it to
+     * an integer if possible, but that creates more trouble than it solves, so you'll have to deal with float
+     * values. Concerning the units: While there may be exist cases where you'd want to use SI units, I cannot
+     * think of any, so base 2 is hard coded here. This may change, if someone can make a valid point on this.
+     * Additionally, I chose to go for the "real" names (Kibibyte, Mebibyte and so on). That might be
+     * confusing to someone not acquainted with the topic but it felt wrong to use the common names. Maybe
+     * I'll add alias constants in the future.
+     * This method only returns the plain number for good reason: Presentation should be decoupled from logic.
+     * If you need formatted file sizes, just do it by yourself using sprintf.
      *
-     * @return int
+     * @param int $unit unit to return file size in. Use the constants provided by this class to make the code
+     *                  clearer. Assigning them integer values has the great advantage of being able to use
+     *                  them as the power in the calculation.
+     *
+     * @return float file size converted to the requested number. this will be rounded to two digits, so if
+     *               you need maximum precision, pass File::SIZE_BYTE to receive the byte count and round it
+     *               by yourself.
      */
-    public function getSize(): int {
-        return $this->isVirtual() ? 0 : $this->getMetadata()->getSize();
+    public function getSize( int $unit = File::SIZE_BYTE ): float {
+        $size = $this->isVirtual() ? 0 : $this->getMetadata()->getSize();
+
+        return (float) round( $size / pow( 1024, $unit ), 2 );
     }
 
     /**
-     * retrieves meta data for a file
+     * retrieves meta data for a file. While we *could* just do this once after initialization of the file
+     * and build all metadata getters in such a way that they just query the stored metadata object, it
+     * would require recreating the SplFileInfo after each file change. That would be way more logical
+     * overhead than just recreating the object once a getter is called.
      *
      * @return \SplFileInfo
      */
@@ -909,21 +1078,29 @@ class File {
     }
 
     /**
-     * checks whether the file is writable
+     * checks whether the file is writable. if it is virtual, writability should depend on
+     * the path being accessible.
      *
      * @return bool
      */
     public function isWritable(): bool {
-        return $this->isVirtual() ? false : $this->getMetadata()->isWritable();
+        return ( $this->isVirtual()
+            ? PathUtil::isWritable( $this->getPath() )
+            : $this->getMetadata()->isWritable()
+        );
     }
 
     /**
-     * checks whether the file is readable
+     * checks whether the file is readable. if it is virtual, writability should depend on
+     * the path being accessible.
      *
      * @return bool
      */
     public function isReadable(): bool {
-        return $this->isVirtual() ? false : $this->getMetadata()->isReadable();
+        return ( $this->isVirtual()
+            ? PathUtil::isReadable( $this->getPath() )
+            : $this->getMetadata()->isReadable()
+        );
     }
 
     /**
@@ -933,5 +1110,18 @@ class File {
      */
     public function isExecutable(): bool {
         return $this->isVirtual() ? false : $this->getMetadata()->isExecutable();
+    }
+
+    /**
+     * retrieves the file name
+     *
+     * @return string
+     */
+    public function getName(): string {
+        return PathUtil::basename( $this->getPath() );
+    }
+
+    public function exists(): bool {
+        return file_exists( $this->getPath() );
     }
 }
