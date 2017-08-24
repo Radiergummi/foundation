@@ -1,5 +1,6 @@
 <?php
 
+use Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException;
 use Radiergummi\Foundation\Framework\FileSystem\File;
 use Radiergummi\Foundation\Framework\Utils\PathUtil;
 
@@ -27,6 +28,13 @@ describe( 'File', function() {
 
         expect( $file->read() )
             ->to->equal( "foo\nbar\nbaz\n" );
+    } );
+
+    it( 'should throw upon reading a virtual file', function() {
+        $file = new File( __DIR__ . '/foo/bar/baz' );
+
+        expect( [ $file, 'read' ] )
+            ->to->throw( FileSystemException::class );
     } );
 
     it( 'should overwrite an existing file', function() {
@@ -81,6 +89,13 @@ describe( 'File', function() {
             ->to->be->false();
     } );
 
+    it( 'should throw upon trying to delete a virtual file', function() {
+        $file = new File( __DIR__ . '/foo/bar/baz' );
+
+        expect( [ $file, 'delete' ] )
+            ->to->throw( FileSystemException::class );
+    } );
+
     it( 'should append to a new file', function() {
         $file      = new File( PathUtil::join( $this->testFileDirectory, 'text.temporary.txt' ) );
         $testValue = (string) time();
@@ -93,57 +108,123 @@ describe( 'File', function() {
         $file->delete();
     } );
 
-    it( 'should determine the type of a physical file', function() {
-        $file = new File( PathUtil::join( $this->testFileDirectory, '1.webp' ) );
+    it( 'should move a file', function() {
+        $file = new File( PathUtil::join( $this->testFileDirectory, 'text.txt' ) );
 
-        expect( $file->determineType() )
-            ->to->equal( 'webp' );
+        $file->move( PathUtil::join( $this->testFileDirectory, 'text.moved.txt' ) );
 
-        expect( $file->getExtension() )
-            ->to->equal( 'webp' );
+        expect( $file->getPath() )
+            ->to->equal(
+                PathUtil::normalize( PathUtil::join( $this->testFileDirectory, 'text.moved.txt' ) )
+            );
 
-        expect( $file->getMimeType() )
-            ->to->equal( 'image/webp' );
+        $file->move( PathUtil::join( $this->testFileDirectory, '..' ) );
+
+        expect( $file->getPath() )
+            ->to->equal(
+                PathUtil::normalize( PathUtil::join( $this->testFileDirectory, '..', 'text.moved.txt' ) )
+            );
+
+        $file->move( PathUtil::join( $this->testFileDirectory, 'text.txt' ) );
     } );
 
-    it( 'should determine the size of a physical file', function() {
+    it( 'should throw upon trying to move a virtual file', function() {
+        $file = new File( __DIR__ . '/foo/bar/baz' );
+
+        /** @noinspection PhpParamsInspection */
+        expect( [ $file, 'move' ] )
+            ->with( PathUtil::join( $this->testFileDirectory, 'previously.not.existing' ) )
+            ->to->throw( FileSystemException::class );
+    } );
+
+    it( 'should copy a file', function() {
+        $file = new File( PathUtil::join( $this->testFileDirectory, 'text.txt' ) );
+
+        $copiedFile = $file->copy( PathUtil::join( $this->testFileDirectory, 'text.duplicate.txt' ) );
+
+        expect( $copiedFile->isVirtual() )
+            ->to->be->false();
+
+        expect( $copiedFile->read() )
+            ->to->equal( $file->read() );
+
+        $copiedFile->delete();
+    } );
+
+    it( 'should throw upon trying to copy a virtual file', function() {
+        $file = new File( __DIR__ . '/foo/bar/baz' );
+
+        /** @noinspection PhpParamsInspection */
+        expect( [ $file, 'copy' ] )
+            ->with( PathUtil::join( $this->testFileDirectory, 'text.duplicate.txt' ) )
+            ->to->throw( FileSystemException::class );
+    } );
+
+    it( 'should rename a file', function() {
+        $file = new File( PathUtil::join( $this->testFileDirectory, 'text.txt' ) );
+
+        $file->rename( 'text.renamed.txt' );
+
+        expect( $file->getPath() )
+            ->to->equal(
+                PathUtil::normalize( PathUtil::join( $this->testFileDirectory, 'text.renamed.txt' ) )
+            );
+
+        $file->rename( 'text.txt' );
+    } );
+
+    it( 'should determine the type of a file', function() {
+        $physicalFile = new File( PathUtil::join( $this->testFileDirectory, '1.webp' ) );
+        $virtualFile  = new File( __DIR__ . '/foo/bar/baz' );
+
+        expect( $physicalFile->determineType() )
+            ->to->equal( 'webp' );
+
+        expect( $physicalFile->getExtension() )
+            ->to->equal( 'webp' );
+
+        expect( $physicalFile->getMimeType() )
+            ->to->equal( 'image/webp' );
+
+        expect( $virtualFile->determineType() )
+            ->to->equal( 'none' );
+
+        expect( $virtualFile->getExtension() )
+            ->to->equal( '' );
+
+        expect( $virtualFile->getMimeType() )
+            ->to->equal( 'application/octet-stream' );
+    } );
+
+    it( 'should determine the size of a file', function() {
         // TODO: Larger test file to properly test the larger units
 
-        $file = new File( PathUtil::join( $this->testFileDirectory, '1.webp' ) );
+        $physicalFile = new File( PathUtil::join( $this->testFileDirectory, '1.webp' ) );
+        $virtualFile  = new File( __DIR__ . '/foo/bar/baz' );
 
-        expect( $file->getSize() )
+        expect( $physicalFile->getSize() )
             ->to->equal( (float) 10474 );
 
-        expect( $file->getSize( File::SIZE_KIBIBYTE ) )
+        expect( $physicalFile->getSize( File::SIZE_KIBIBYTE ) )
             ->to->equal( 10.23 );
 
-        expect( $file->getSize( File::SIZE_MEBIBYTE ) )
+        expect( $physicalFile->getSize( File::SIZE_MEBIBYTE ) )
             ->to->equal( 0.01 );
 
-        expect( $file->getSize( File::SIZE_GIBIBYTE ) )
+        expect( $physicalFile->getSize( File::SIZE_GIBIBYTE ) )
             ->to->equal( (float) 0 );
 
-        expect( $file->getSize( File::SIZE_TEBIBYTE ) )
+        expect( $physicalFile->getSize( File::SIZE_TEBIBYTE ) )
             ->to->equal( (float) 0 );
 
-        expect( $file->getSize( File::SIZE_PEBIBYTE ) )
+        expect( $physicalFile->getSize( File::SIZE_PEBIBYTE ) )
             ->to->equal( (float) 0 );
 
-        expect( $file->getSize( File::SIZE_EXBIBYTE ) )
+        expect( $physicalFile->getSize( File::SIZE_EXBIBYTE ) )
             ->to->equal( (float) 0 );
-    } );
 
-    it( 'should determine the type of a physical file', function() {
-        $file = new File( PathUtil::join( $this->testFileDirectory, '1.webp' ) );
-
-        expect( $file->determineType() )
-            ->to->equal( 'webp' );
-
-        expect( $file->getExtension() )
-            ->to->equal( 'webp' );
-
-        expect( $file->getMimeType() )
-            ->to->equal( 'image/webp' );
+        expect( $virtualFile->getSize() )
+            ->to->equal( (float) 0 );
     } );
 
     it( 'should determine the filename', function() {
@@ -155,6 +236,17 @@ describe( 'File', function() {
 
         expect( $virtualFile->getName() )
             ->to->equal( 'baz.test' );
+    } );
+
+    it( 'should determine the file extension', function() {
+        $physicalFile = new File( PathUtil::join( $this->testFileDirectory, 'executable.sh' ) );
+        $virtualFile  = new File( '/foo/bar/baz.test' );
+
+        expect( $physicalFile->getExtension() )
+            ->to->equal( 'sh' );
+
+        expect( $virtualFile->getExtension() )
+            ->to->equal( 'test' );
     } );
 
     it( 'should determine whether a file is executable', function() {

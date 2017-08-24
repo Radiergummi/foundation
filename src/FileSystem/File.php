@@ -8,12 +8,15 @@ use Radiergummi\Foundation\Framework\Exception\FoundationException;
 use Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException;
 use Radiergummi\Foundation\Framework\Utils\PathUtil;
 use SplFileInfo;
+use const DIRECTORY_SEPARATOR;
 use const FILE_APPEND;
 use const FILEINFO_MIME_TYPE;
 use function file_exists;
 use function file_get_contents;
 use function file_put_contents;
 use function is_file;
+use function restore_error_handler;
+use function set_error_handler;
 use function strtolower;
 use function substr;
 use function unlink;
@@ -670,7 +673,9 @@ class File {
      */
     public function copy( string $destinationPath ): File {
         try {
+            set_error_handler( [ $this, 'errorHandler' ] );
             copy( $this->getPath(), $destinationPath );
+            restore_error_handler();
         }
         catch ( FoundationException $exception ) {
             throw new FileSystemException(
@@ -686,7 +691,7 @@ class File {
     }
 
     /**
-     * retrieves the file path
+     * retrieves the current file path
      *
      * @return string file path
      */
@@ -695,9 +700,17 @@ class File {
     }
 
     /**
-     * sets the file path
+     * sets the file path. please note that this explicitly and purposefully does not move the file!
+     * to move it, use `move(string $destinationPath): void`. If you change the path manually for a
+     * non-virtual file, expect the unexpected.
+     * In most cases, this should not be necessary since all File methods automatically set the path
+     * if it changes on disk.
      *
-     * @param string $path path to set
+     * @see \Radiergummi\Foundation\Framework\FileSystem\File::move()
+     *
+     * @param string $path path to set. Will be normalized
+     *
+     * @return void
      */
     public function setPath( string $path ) {
         $this->path = PathUtil::normalize( $path );
@@ -725,6 +738,10 @@ class File {
      * @return string
      */
     public function getMimeType(): string {
+        if ( $this->isVirtual() ) {
+            return 'application/octet-stream';
+        }
+
         if ( $this->mimeType ) {
             return $this->mimeType;
         }
@@ -747,6 +764,24 @@ class File {
      */
     public function setMimeType( string $mimeType ) {
         $this->mimeType = $mimeType;
+    }
+
+    /**
+     * checks whether the file is virtual
+     *
+     * @return bool
+     */
+    public function isVirtual(): bool {
+        return $this->isVirtual;
+    }
+
+    /**
+     * marks the file as virtual
+     *
+     * @param bool $virtual
+     */
+    public function setIsVirtual( bool $virtual ) {
+        $this->isVirtual = $virtual;
     }
 
     /**
@@ -779,7 +814,10 @@ class File {
      * @return string
      */
     public function getExtension(): string {
-        return $this->extension ?? $this->determineType();
+        return $this->extension
+               ?? $this->isVirtual()
+                   ? PathUtil::extension( $this->getPath() )
+                   : $this->determineType();
     }
 
     /**
@@ -802,9 +840,27 @@ class File {
      * determines file type by evaluating magic numbers aka the first few bytes of a file
      *
      * @return string
+     * @throws \Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException
      */
     public function determineType(): string {
-        $handle = fopen( $this->path, 'r' );
+        if ( $this->isVirtual() ) {
+            return 'none';
+        }
+
+        try {
+            set_error_handler( [ $this, 'errorHandler' ] );
+            $handle = fopen( $this->path, 'r' );
+            restore_error_handler();
+        }
+        catch ( FoundationException $exception ) {
+            throw new FileSystemException(
+                'could not determine type of file ' . $this->getPath(),
+                1,
+                $exception,
+                __FILE__,
+                __LINE__
+            );
+        }
 
         // get files magic number
         $fileHeader = bin2hex( fread( $handle, 16 ) );
@@ -816,24 +872,6 @@ class File {
         }
 
         return 'bin';
-    }
-
-    /**
-     * checks whether the file is virtual
-     *
-     * @return bool
-     */
-    public function isVirtual(): bool {
-        return $this->isVirtual;
-    }
-
-    /**
-     * marks the file as virtual
-     *
-     * @param bool $virtual
-     */
-    public function setIsVirtual( bool $virtual ) {
-        $this->isVirtual = $virtual;
     }
 
     /**
@@ -860,8 +898,19 @@ class File {
      * @throws \Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException
      */
     public function move( string $destinationPath ) {
+        $destinationPath   = PathUtil::normalize( $destinationPath );
+        $lastPathCharacter = substr( $destinationPath, - 1, 1 );
+
+        // check if the last character of the destination is a directory separator or a dot, in which case
+        // we assume the file needs to be moved into a directory but keeping its original name.
+        if ( $lastPathCharacter === DIRECTORY_SEPARATOR || $lastPathCharacter === '.' ) {
+            $destinationPath = PathUtil::join( $destinationPath, $this->getName() );
+        }
+
         try {
+            set_error_handler( [ $this, 'errorHandler' ] );
             rename( $this->getPath(), $destinationPath );
+            restore_error_handler();
         }
         catch ( FoundationException $exception ) {
             throw new FileSystemException(
@@ -877,6 +926,15 @@ class File {
     }
 
     /**
+     * retrieves the file name
+     *
+     * @return string
+     */
+    public function getName(): string {
+        return PathUtil::basename( $this->getPath() );
+    }
+
+    /**
      * reads a file
      *
      * @return string
@@ -884,7 +942,10 @@ class File {
      */
     public function read(): string {
         try {
+            set_error_handler( [ $this, 'errorHandler' ] );
             $content = file_get_contents( $this->getPath() );
+            restore_error_handler();
+
             $this->setIsVirtual( false );
 
             return $content;
@@ -910,7 +971,9 @@ class File {
      */
     public function write( string $content ) {
         try {
+            set_error_handler( [ $this, 'errorHandler' ] );
             file_put_contents( $this->getPath(), $content );
+            restore_error_handler();
         }
         catch ( FoundationException $exception ) {
             throw new FileSystemException(
@@ -935,7 +998,9 @@ class File {
      */
     public function append( string $content ) {
         try {
+            set_error_handler( [ $this, 'errorHandler' ] );
             file_put_contents( $this->getPath(), $content, FILE_APPEND );
+            restore_error_handler();
         }
         catch ( FoundationException $exception ) {
             throw new FileSystemException(
@@ -957,14 +1022,10 @@ class File {
      * @throws \Radiergummi\Foundation\Framework\FileSystem\Exception\FileSystemException
      */
     public function delete() {
-
-        // deleting virtual files makes no sense
-        if ( $this->isVirtual() ) {
-            return;
-        }
-
         try {
+            set_error_handler( [ $this, 'errorHandler' ] );
             unlink( $this->getPath() );
+            restore_error_handler();
         }
         catch ( FoundationException $exception ) {
             throw new FileSystemException(
@@ -1112,16 +1173,27 @@ class File {
         return $this->isVirtual() ? false : $this->getMetadata()->isExecutable();
     }
 
-    /**
-     * retrieves the file name
-     *
-     * @return string
-     */
-    public function getName(): string {
-        return PathUtil::basename( $this->getPath() );
-    }
-
     public function exists(): bool {
         return file_exists( $this->getPath() );
+    }
+
+    /** @noinspection PhpUnusedPrivateMethodInspection */
+    /**
+     * Handles PHP errors thrown with the native filesystem methods. This method is not intended for usage
+     * other than by PHP itself (would be pretty pointless anyway). It simply rethrows any PHP E_* as a
+     * FoundationException to enable try-catch.
+     *
+     * @ignore
+     *
+     * @param string $code    error type
+     * @param string $message error message
+     * @param string $file    file
+     * @param int    $line    line
+     *
+     * @return void
+     * @throws \Radiergummi\Foundation\Framework\Exception\FoundationException
+     */
+    public function errorHandler( string $code, string $message, string $file, int $line ) {
+        throw new FoundationException( $message, $code, null, $file, $line );
     }
 }
